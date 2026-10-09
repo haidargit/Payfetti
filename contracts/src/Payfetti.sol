@@ -17,15 +17,12 @@ pragma solidity 0.8.24;
 ///           ])
 ///
 ///         Arc's CallFrom precompile preserves the original sender per subcall,
-///         so `msg.sender` here is the payer rather than Multicall3From. If that
-///         ever fails to apply the payer can call `recordRun` separately: a run
-///         is always attributed to `msg.sender`, never to a payer address passed
-///         as an argument, which would be spoofable.
+///         so `msg.sender` here is the payer rather than Multicall3From. A run is
+///         always attributed to `msg.sender`, never to a payer address passed as
+///         an argument, which would be spoofable.
 contract Payfetti {
-    /// @param payeeRoot   Merkle root over the run's payee leaves
-    /// @param total       sum of intended payouts, in 6-decimal USDC units
-    /// @param count       number of payees
-    /// @param blockNumber block the record landed in, so receipts skip log scans
+    /// @param total       6-decimal USDC units
+    /// @param blockNumber lets receipts skip log scans
     struct Run {
         bytes32 payeeRoot;
         uint256 total;
@@ -34,12 +31,10 @@ contract Payfetti {
         uint64 blockNumber;
     }
 
-    /// @dev payer => runId => run. Namespacing by payer lets two payers reuse a
-    ///      runId, and stops anyone squatting another payer's.
+    /// @dev Namespaced by payer, so nobody can squat another payer's runId.
     mapping(address => mapping(bytes32 => Run)) private _runs;
 
-    /// @dev payer => runId => payee => whether that payee's transfer was skipped,
-    ///      e.g. a blocklisted address, which reverts on Arc.
+    /// @dev Payees whose transfer reverted, e.g. an address on Arc's blocklist.
     mapping(address => mapping(bytes32 => mapping(address => bool))) private _skipped;
 
     event RunRecorded(
@@ -59,10 +54,8 @@ contract Payfetti {
     error MissingRoot();
     error NoPayeesGiven();
 
-    /// @notice Record a payout run under the caller.
-    /// @param total Self-reported display metadata, not verified against the
-    ///              leaves. The amount inside a Merkle leaf is the only one a
-    ///              payee should rely on. Same applies to `count`.
+    /// @param total Display metadata, not verified against the leaves. Same for
+    ///              `count`. Only a leaf's amount is safe to rely on.
     function recordRun(
         bytes32 runId,
         bytes32 payeeRoot,
@@ -70,17 +63,14 @@ contract Payfetti {
         uint32 count,
         string calldata memo
     ) external {
-        // Idempotency guard. A double-click, a wallet retry or a resubmitted
-        // batch cannot create a second record, and because the record shares one
-        // transaction with the transfers, the duplicate transfers revert with it.
+        // Sharing a transaction with the transfers, this also unwinds a replay.
         if (_runs[msg.sender][runId].payeeRoot != bytes32(0)) {
             revert RunAlreadyRecorded(msg.sender, runId);
         }
         if (payeeRoot == bytes32(0)) revert MissingRoot();
         if (count == 0) revert EmptyRun();
 
-        // uint64 is ample for both, and packing them with `count` puts the tail
-        // of the struct in one slot: 3 SSTOREs per run rather than 5.
+        // Narrow casts pack the struct tail into one slot: 3 SSTOREs, not 5.
         // forge-lint: disable-next-line(unsafe-typecast)
         uint64 ts = uint64(block.timestamp);
         // forge-lint: disable-next-line(unsafe-typecast)
@@ -92,9 +82,8 @@ contract Payfetti {
         emit RunRecorded(msg.sender, runId, payeeRoot, total, count, memo);
     }
 
-    /// @notice Flag payees whose transfer failed inside the batch, so the UI can
-    ///         retry just those. Only the run's payer can do this, enforced
-    ///         implicitly: the record lives under `msg.sender`.
+    /// @notice Lets the UI retry only the failures. Payer-only, enforced by the
+    ///         record living under msg.sender.
     function markSkipped(
         bytes32 runId,
         address[] calldata payees
@@ -135,7 +124,7 @@ contract Payfetti {
     }
 
     /// @notice The leaf a receipt proves. Double-hashed against second-preimage
-    ///         attacks, matching OpenZeppelin and merkletreejs.
+    ///         attacks.
     function leafOf(
         address payee,
         uint256 amount,
@@ -144,14 +133,11 @@ contract Payfetti {
         return keccak256(bytes.concat(keccak256(abi.encode(payee, amount, noteHash))));
     }
 
-    /// @notice Prove `payee` was included in a declared run for exactly `amount`.
-    ///         A view, so the frontend checks it over `eth_call` for free.
-    /// @dev    This proves inclusion in a *declaration*, not that money moved: a
-    ///         payer could record a root and send no transfers. A complete receipt
-    ///         is this proof plus a USDC `Transfer` log from the same transaction.
-    ///         Both necessarily share one tx hash, because `recordRun` and the
-    ///         transfers are subcalls of a single `aggregate3`. The frontend must
-    ///         check both halves. See `docs/security.md`.
+    /// @notice A view, so the frontend checks receipts over `eth_call` for free.
+    /// @dev    Proves inclusion in a *declaration*, not that money moved: a payer
+    ///         could record a root and send nothing. A complete receipt is this
+    ///         proof plus a USDC `Transfer` log from the same transaction, which
+    ///         `aggregate3` guarantees. See `docs/security.md`.
     function verifyInclusion(
         address payer,
         bytes32 runId,
@@ -165,8 +151,7 @@ contract Payfetti {
         return _processProof(proof, leafOf(payee, amount, noteHash)) == root;
     }
 
-    /// @dev Sorted-pair hashing, so proofs carry no left/right flags. Matches
-    ///      OpenZeppelin's MerkleProof.
+    /// @dev Sorted-pair hashing
     function _processProof(
         bytes32[] calldata proof,
         bytes32 leaf
