@@ -4,10 +4,8 @@ pragma solidity 0.8.24;
 /// @title  Payfetti — batch payout run registry
 /// @notice Records one-to-many USDC payout runs on Arc and lets any payee prove
 ///         they were paid a specific amount in a specific run.
-/// @dev    Never touches USDC: no transfers, no approvals, no balance, no
-///         payable. Transfers happen wallet-to-wallet inside Arc's
-///         Multicall3From; this only writes the record beside them. No owner,
-///         no admin function, no upgrade path.
+/// @dev    Never touches USDC. Transfers happen wallet-to-wallet inside Arc's
+///         Multicall3From; this only writes the record beside them.
 ///
 ///         Intended call pattern, one transaction:
 ///
@@ -55,7 +53,7 @@ contract Payfetti {
     error NoPayeesGiven();
 
     /// @param total Display metadata, not verified against the leaves. Same for
-    ///              `count`. Only a leaf's amount is safe to rely on.
+    ///              `count`.
     function recordRun(
         bytes32 runId,
         bytes32 payeeRoot,
@@ -133,7 +131,7 @@ contract Payfetti {
         return keccak256(bytes.concat(keccak256(abi.encode(payee, amount, noteHash))));
     }
 
-    /// @notice A view, so the frontend checks receipts over `eth_call` for free.
+    /// @notice A view, so the frontend checks receipts over `eth_call`.
     /// @dev    Proves inclusion in a *declaration*, not that money moved: a payer
     ///         could record a root and send nothing. A complete receipt is this
     ///         proof plus a USDC `Transfer` log from the same transaction, which
