@@ -4,9 +4,8 @@ pragma solidity 0.8.24;
 import {Payfetti} from "../src/Payfetti.sol";
 import {Test} from "forge-std/Test.sol";
 
-/// @dev Stands in for Multicall3From without the CallFrom precompile, so
-///      msg.sender becomes the forwarder: the opposite of Arc's behaviour.
-///      Proves attribution is correct either way.
+/// @dev Multicall3From without the CallFrom precompile, so msg.sender becomes
+///      the forwarder: the opposite of Arc's behaviour.
 contract NaiveForwarder {
     Payfetti private immutable payfetti;
 
@@ -80,8 +79,7 @@ contract PayfettiTest is Test {
         payfetti.recordRun(RUN_ID, root, 500_000, 50, "march panel");
     }
 
-    /// A retried batch must not create a second record. Since the record shares
-    /// a transaction with the transfers, this revert unwinds those too.
+    /// Sharing a transaction with the transfers, this revert unwinds those too.
     function test_recordRun_revertsOnDuplicateRunId() public {
         bytes32 root = keccak256("root");
 
@@ -93,8 +91,6 @@ contract PayfettiTest is Test {
         payfetti.recordRun(RUN_ID, root, 999_999, 7, "second");
     }
 
-    /// runIds are namespaced per payer, so one payer cannot squat or block
-    /// another's identifier.
     function test_recordRun_runIdsAreNamespacedPerPayer() public {
         bytes32 rootA = keccak256("rootA");
         bytes32 rootB = keccak256("rootB");
@@ -123,15 +119,13 @@ contract PayfettiTest is Test {
         payfetti.recordRun(RUN_ID, keccak256("root"), 100, 0, "");
     }
 
-    /// Attribution follows the direct caller, never an address passed in as an
-    /// argument, so a run cannot be forged in someone else's name.
+    /// So a run cannot be forged in someone else's name.
     function test_recordRun_attributesToDirectCaller_notAnIntermediary() public {
         NaiveForwarder fwd = new NaiveForwarder(payfetti);
 
         vm.prank(payer);
         fwd.forwardRecordRun(RUN_ID, keccak256("root"), 100, 1);
 
-        // Recorded under the forwarder, not under payer.
         assertFalse(payfetti.runExists(payer, RUN_ID), "must not attribute to the indirect sender");
         assertTrue(payfetti.runExists(address(fwd), RUN_ID), "attributed to the direct caller");
     }
@@ -166,8 +160,7 @@ contract PayfettiTest is Test {
         payfetti.markSkipped(RUN_ID, skipped);
     }
 
-    /// Only the run's payer can flag skips, enforced structurally: the record
-    /// lives under msg.sender rather than behind an ownership check.
+    /// Enforced by the record living under msg.sender, not an ownership check.
     function test_markSkipped_revertsForNonPayer() public {
         _recordSimpleRun();
 
@@ -198,8 +191,6 @@ contract PayfettiTest is Test {
 
     /* -------------------------- verifyInclusion -------------------------- */
 
-    /// A 4-payee run: build the tree, then prove each payee. This is what a
-    /// receipt URL does, for free, over eth_call.
     function test_verifyInclusion_provesEveryPayeeInAFourLeafTree() public {
         (bytes32 root, bytes32[4] memory leaves) = _buildFourLeafTree();
 
@@ -235,8 +226,7 @@ contract PayfettiTest is Test {
         assertTrue(payfetti.verifyInclusion(payer, RUN_ID, dave, 1_000_000, NOTE, proof3), "dave");
     }
 
-    /// The receipt must be amount-specific: a real proof with an inflated amount
-    /// has to fail, or receipts would be worthless as evidence.
+    /// A real proof with an inflated amount must fail, or receipts prove nothing.
     function test_verifyInclusion_failsOnWrongAmount() public {
         (bytes32 root, bytes32[4] memory leaves) = _buildFourLeafTree();
 
@@ -318,7 +308,6 @@ contract PayfettiTest is Test {
         payfetti.recordRun(runId, root, 1, 1, "");
     }
 
-    /// A single-leaf tree must never validate a different payee, for any inputs.
     function testFuzz_verifyInclusion_rejectsForgedPayee(
         address realPayee,
         address forged,

@@ -27,13 +27,11 @@ number_underscore = "thousands"
 multiline_func_header = "params_first"
 sort_imports = true
 
-# Arc networks. Neither RPC needs an API key. Chain IDs: 5042 / 5042002.
+# Arc networks.
 [rpc_endpoints]
 arc = "https://rpc.mainnet.arc.io"
 arc_testnet = "https://rpc.testnet.arc.io"
 
-# Arc explorers run Blockscout, which ignores the key. If `forge verify-contract`
-# returns a 500, verify through the explorer web UI instead.
 [etherscan]
 arc = {key = "unused", url = "https://explorer.arc.io/api", chain = 5042}
 arc_testnet = {key = "unused", url = "https://testnet.arcscan.app/api", chain = 5042002}
