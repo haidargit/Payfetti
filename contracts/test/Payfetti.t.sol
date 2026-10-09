@@ -34,8 +34,10 @@ contract PayfettiTest is Test {
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
     address internal carol = makeAddr("carol");
+    address internal dave = makeAddr("dave");
 
     bytes32 internal constant RUN_ID = keccak256("run-1");
+    bytes32 internal constant NOTE = keccak256("march panel");
 
     event RunRecorded(
         address indexed payer,
@@ -194,10 +196,166 @@ contract PayfettiTest is Test {
         payfetti.markSkipped(RUN_ID, new address[](0));
     }
 
+    /* -------------------------- verifyInclusion -------------------------- */
+
+    /// A 4-payee run: build the tree, then prove each payee. This is what a
+    /// receipt URL does, for free, over eth_call.
+    function test_verifyInclusion_provesEveryPayeeInAFourLeafTree() public {
+        (bytes32 root, bytes32[4] memory leaves) = _buildFourLeafTree();
+
+        vm.prank(payer);
+        payfetti.recordRun(RUN_ID, root, 4_000_000, 4, "four payees");
+
+        // tree:        root
+        //            /      \
+        //         h01        h23
+        //        /   \      /   \
+        //      l0    l1   l2    l3
+        bytes32 h01 = _hashPair(leaves[0], leaves[1]);
+        bytes32 h23 = _hashPair(leaves[2], leaves[3]);
+
+        bytes32[] memory proof0 = new bytes32[](2);
+        proof0[0] = leaves[1];
+        proof0[1] = h23;
+        assertTrue(payfetti.verifyInclusion(payer, RUN_ID, alice, 1_000_000, NOTE, proof0), "alice");
+
+        bytes32[] memory proof1 = new bytes32[](2);
+        proof1[0] = leaves[0];
+        proof1[1] = h23;
+        assertTrue(payfetti.verifyInclusion(payer, RUN_ID, bob, 1_000_000, NOTE, proof1), "bob");
+
+        bytes32[] memory proof2 = new bytes32[](2);
+        proof2[0] = leaves[3];
+        proof2[1] = h01;
+        assertTrue(payfetti.verifyInclusion(payer, RUN_ID, carol, 1_000_000, NOTE, proof2), "carol");
+
+        bytes32[] memory proof3 = new bytes32[](2);
+        proof3[0] = leaves[2];
+        proof3[1] = h01;
+        assertTrue(payfetti.verifyInclusion(payer, RUN_ID, dave, 1_000_000, NOTE, proof3), "dave");
+    }
+
+    /// The receipt must be amount-specific: a real proof with an inflated amount
+    /// has to fail, or receipts would be worthless as evidence.
+    function test_verifyInclusion_failsOnWrongAmount() public {
+        (bytes32 root, bytes32[4] memory leaves) = _buildFourLeafTree();
+
+        vm.prank(payer);
+        payfetti.recordRun(RUN_ID, root, 4_000_000, 4, "four payees");
+
+        bytes32[] memory proof0 = new bytes32[](2);
+        proof0[0] = leaves[1];
+        proof0[1] = _hashPair(leaves[2], leaves[3]);
+
+        assertFalse(payfetti.verifyInclusion(payer, RUN_ID, alice, 9_999_999, NOTE, proof0));
+    }
+
+    function test_verifyInclusion_failsForPayeeNotInTheRun() public {
+        (bytes32 root, bytes32[4] memory leaves) = _buildFourLeafTree();
+
+        vm.prank(payer);
+        payfetti.recordRun(RUN_ID, root, 4_000_000, 4, "four payees");
+
+        bytes32[] memory proof0 = new bytes32[](2);
+        proof0[0] = leaves[1];
+        proof0[1] = _hashPair(leaves[2], leaves[3]);
+
+        address stranger = makeAddr("stranger");
+        assertFalse(payfetti.verifyInclusion(payer, RUN_ID, stranger, 1_000_000, NOTE, proof0));
+    }
+
+    function test_verifyInclusion_failsOnUnknownRun() public view {
+        bytes32[] memory proof = new bytes32[](0);
+        assertFalse(payfetti.verifyInclusion(payer, RUN_ID, alice, 1_000_000, NOTE, proof));
+    }
+
+    /// A single-payee run: the leaf is the root, so the proof is empty.
+    function test_verifyInclusion_singlePayeeRun() public {
+        bytes32 leaf = payfetti.leafOf(alice, 1_000_000, NOTE);
+
+        vm.prank(payer);
+        payfetti.recordRun(RUN_ID, leaf, 1_000_000, 1, "one payee");
+
+        assertTrue(payfetti.verifyInclusion(payer, RUN_ID, alice, 1_000_000, NOTE, new bytes32[](0)));
+        assertFalse(payfetti.verifyInclusion(payer, RUN_ID, bob, 1_000_000, NOTE, new bytes32[](0)));
+    }
+
+    /* ------------------------------- fuzz -------------------------------- */
+
+    function testFuzz_recordRun_roundTrips(
+        bytes32 runId,
+        bytes32 root,
+        uint256 total,
+        uint32 count,
+        address who
+    ) public {
+        vm.assume(root != bytes32(0));
+        vm.assume(count != 0);
+        vm.assume(who != address(0));
+
+        vm.prank(who);
+        payfetti.recordRun(runId, root, total, count, "fuzz");
+
+        Payfetti.Run memory r = payfetti.getRun(who, runId);
+        assertEq(r.payeeRoot, root);
+        assertEq(r.total, total);
+        assertEq(r.count, count);
+    }
+
+    function testFuzz_recordRun_alwaysRejectsReplay(
+        bytes32 runId,
+        bytes32 root,
+        address who
+    ) public {
+        vm.assume(root != bytes32(0));
+        vm.assume(who != address(0));
+
+        vm.prank(who);
+        payfetti.recordRun(runId, root, 1, 1, "");
+
+        vm.expectRevert(abi.encodeWithSelector(Payfetti.RunAlreadyRecorded.selector, who, runId));
+        vm.prank(who);
+        payfetti.recordRun(runId, root, 1, 1, "");
+    }
+
+    /// A single-leaf tree must never validate a different payee, for any inputs.
+    function testFuzz_verifyInclusion_rejectsForgedPayee(
+        address realPayee,
+        address forged,
+        uint256 amount
+    ) public {
+        vm.assume(realPayee != forged);
+
+        bytes32 leaf = payfetti.leafOf(realPayee, amount, NOTE);
+
+        vm.prank(payer);
+        payfetti.recordRun(RUN_ID, leaf, amount, 1, "");
+
+        assertTrue(payfetti.verifyInclusion(payer, RUN_ID, realPayee, amount, NOTE, new bytes32[](0)));
+        assertFalse(payfetti.verifyInclusion(payer, RUN_ID, forged, amount, NOTE, new bytes32[](0)));
+    }
+
     /* ------------------------------ helpers ------------------------------ */
 
     function _recordSimpleRun() private {
         vm.prank(payer);
         payfetti.recordRun(RUN_ID, keccak256("root"), 500_000, 50, "simple");
+    }
+
+    function _buildFourLeafTree() private view returns (bytes32 root, bytes32[4] memory leaves) {
+        leaves[0] = payfetti.leafOf(alice, 1_000_000, NOTE);
+        leaves[1] = payfetti.leafOf(bob, 1_000_000, NOTE);
+        leaves[2] = payfetti.leafOf(carol, 1_000_000, NOTE);
+        leaves[3] = payfetti.leafOf(dave, 1_000_000, NOTE);
+
+        root = _hashPair(_hashPair(leaves[0], leaves[1]), _hashPair(leaves[2], leaves[3]));
+    }
+
+    /// Mirrors the contract's sorted-pair hashing.
+    function _hashPair(
+        bytes32 a,
+        bytes32 b
+    ) private pure returns (bytes32) {
+        return a <= b ? keccak256(abi.encode(a, b)) : keccak256(abi.encode(b, a));
     }
 }
