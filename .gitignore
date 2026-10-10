@@ -12,6 +12,7 @@ contracts/lib/*
 
 web/dist/
 web/.vite/
+web/*.tsbuildinfo
 
 .env
 .env.*
