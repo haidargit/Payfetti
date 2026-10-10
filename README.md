@@ -13,12 +13,12 @@ Deployed bytecode matches this source byte for byte, at 2,555 bytes. Mainnet pen
 
 You run a survey. 200 people answer. You promised each one $1.
 
-| How you'd pay them today | Fee each | On a $200 payout |
-|---|---|---|
-| PayPal / card | $0.30–0.50 | $60–100 in fees |
-| ACH | ~$0.25 | ~$50, plus 200 manual entries |
-| International wire | $10–15 | $2,000–3,000. Structurally impossible |
-| Gift cards | "free" | What people actually do |
+| How you'd pay them today | Fee each   | On a $200 payout                      |
+| ------------------------ | ---------- | ------------------------------------- |
+| PayPal / card            | $0.30–0.50 | $60–100 in fees                       |
+| ACH                      | ~$0.25     | ~$50, plus 200 manual entries         |
+| International wire       | $10–15     | $2,000–3,000. Structurally impossible |
+| Gift cards               | "free"     | What people actually do               |
 
 Every incumbent rail has a per-payment floor of roughly $0.25 to $15. Below about $2
 the fee eats the payment, so the payment usually doesn't happen at all. The study
@@ -38,12 +38,12 @@ don't pay them $2 and grumble. You never make the offer.
 
 ## Why Arc
 
-| Rail | Per-payment floor |
-|---|---|
-| International wire | $10–15 |
-| Card interchange | $0.25–0.50 |
-| ACH | ~$0.25 |
-| **Arc** | **$0.00093** |
+| Rail               | Per-payment floor |
+| ------------------ | ----------------- |
+| International wire | $10–15            |
+| Card interchange   | $0.25–0.50        |
+| ACH                | ~$0.25            |
+| **Arc**            | **$0.00093**      |
 
 Measured, not estimated. 200 payees in one `aggregate3` costs 9,425,620 gas, about
 **$0.189**. Each extra payee adds 46,459 gas, about **$0.00093**, and that figure
@@ -56,11 +56,11 @@ Reproduce it yourself. Read-only, no wallet, no money:
 python3 scripts/measure-gas.py
 ```
 
-| Payees | On Arc | Same payout via PayPal |
-|---|---|---|
-| 50 | **$0.048** (executed, not estimated) | $15–25 |
-| 200 | **$0.189** | $60–100 |
-| 500 | **$0.467** | $150–250 |
+| Payees | On Arc                               | Same payout via PayPal |
+| ------ | ------------------------------------ | ---------------------- |
+| 50     | **$0.048** (executed, not estimated) | $15–25                 |
+| 200    | **$0.189**                           | $60–100                |
+| 500    | **$0.467**                           | $150–250               |
 
 Two Arc-specific properties make this a product rather than a script:
 
@@ -117,11 +117,11 @@ python3 scripts/verify-run.py \
 
 Moving the money is the easy part. The contract does three things:
 
-| Job | Why |
-|---|---|
-| Rejects a duplicate `runId` | a double-click or a retry cannot double-pay |
+| Job                                               | Why                                                            |
+| ------------------------------------------------- | -------------------------------------------------------------- |
+| Rejects a duplicate `runId`                       | a double-click or a retry cannot double-pay                    |
 | Stores a Merkle root over `(payee, amount, note)` | each payee gets a receipt proving *they* were paid this amount |
-| Records skipped payees | re-run only the failures, not the whole batch |
+| Records skipped payees                            | re-run only the failures, not the whole batch                  |
 
 It never touches USDC. A bug here cannot lose funds; the worst case is a wrong
 record. See [`docs/security.md`](docs/security.md).
