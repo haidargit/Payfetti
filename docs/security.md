@@ -133,13 +133,13 @@ Arc testnet, Oct 8 2026. A 50-payee run plus follow-up probes:
 | `markSkipped` flags are write-only (never unset) | Low | by design: retries create a new run, so skip flags are historical |
 | `markSkipped` with a very large payee list could exceed the block gas limit | Low | ~20k gas per payee; chunk the call |
 | Payee wallet loss / wrong address pasted by the payer | **High, and out of our control** | on-chain transfers are irreversible. The UI must make the preview and validation step hard to skip |
-| Merkle tree built in TS must match the contract's sorted-pair, double-hashed leaves exactly | Medium | a **chain-verified reference implementation** now exists in `scripts/keccak.py` (reproduces the on-chain root). The TS tree must be tested against it |
+| Merkle tree built in TS must match the contract's sorted-pair, double-hashed leaves exactly | Low | `scripts/keccak.py` is chain-verified, and `web/tests/merkle.test.ts` pins the TS tree against values the deployed contract accepted. Runs in CI |
 
 ## 7. Not done yet
 
 - [ ] Static analysis (`slither`): low value given no token logic, but cheap
 - [ ] `forge coverage` report
-- [ ] Cross-implementation Merkle test: TypeScript tree vs. `scripts/keccak.py` (which is already chain-verified)
+- [x] ~~Cross-implementation Merkle test: TypeScript tree vs. `scripts/keccak.py`~~ (`web/tests/merkle.test.ts`, runs in CI)
 - [x] ~~Testnet verification of `CallFrom` and transfer gas~~ (both confirmed Oct 8 2026)
 - [ ] Confirm whether `Memo` can nest inside `Multicall3From` (both require an EOA caller)
 
