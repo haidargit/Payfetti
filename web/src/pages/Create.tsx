@@ -27,6 +27,10 @@ export function Create() {
 
   const [text, setText] = useState(EXAMPLE);
   const [memo, setMemo] = useState("Payfetti run");
+  // On by default: an on-chain note is the difference between a receipt that
+  // survives on its own and one that only exists in a link you have to send.
+  // Costs 9,299 gas per payee and publishes the note text, so it can be turned off.
+  const [onChainNotes, setOnChainNotes] = useState(true);
   const [phase, setPhase] = useState<Phase>("edit");
   const [error, setError] = useState<string>("");
   const [txHash, setTxHash] = useState<Hex | null>(null);
@@ -35,7 +39,8 @@ export function Create() {
 
   const parsed = useMemo(() => parseRows(text), [text]);
 
-  const gas = estimateRunGas(parsed.rows.length);
+  const gas = estimateRunGas(parsed.rows.length, onChainNotes);
+  const gasBare = estimateRunGas(parsed.rows.length, false);
   // Quote at the live price but never below Arc's 20 Gwei floor, since a transaction
   // under the floor is silently dropped with no error and no receipt.
   const price = gasPrice && gasPrice > MIN_GAS_PRICE ? gasPrice : MIN_GAS_PRICE;
@@ -61,7 +66,7 @@ export function Create() {
     setError("");
     setPhase("sending");
     try {
-      const run = buildRun(parsed.rows, memo, newRunId());
+      const run = buildRun(parsed.rows, memo, newRunId(), { onChainNotes });
       setBuilt(run);
 
       const hash = await walletClient.writeContract({
@@ -193,6 +198,33 @@ export function Create() {
         Payees, one per line: <code>address, amount, note</code>
       </label>
       <textarea id="rows" rows={12} value={text} onChange={(e) => setText(e.target.value)} />
+
+      <div className="opt">
+        <label htmlFor="onchain">
+          <input
+            id="onchain"
+            type="checkbox"
+            checked={onChainNotes}
+            onChange={(e) => setOnChainNotes(e.target.checked)}
+          />{" "}
+          Write each note on-chain
+        </label>
+        <p className="muted small">
+          {onChainNotes ? (
+            <>
+              Each payee's note is stored permanently on Arc and anyone can read it. Recipients can
+              then find their own payment without a link from you. Adds{" "}
+              <strong>${(gasCostUsdc(gas - gasBare, price)).toFixed(4)}</strong> to this run
+              {parsed.rows.length > 0 && <> ({parsed.rows.length} payees)</>}.
+            </>
+          ) : (
+            <>
+              Notes stay off-chain, in the receipt links only. Cheaper, but if you lose your run file
+              the notes are gone and recipients cannot look themselves up.
+            </>
+          )}
+        </p>
+      </div>
 
       <div className="grid">
         <div className="stat">

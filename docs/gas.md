@@ -121,6 +121,30 @@ amortizes. Fitting the 10→50 range:
 
 So a run costs roughly `39,096 + 46,459 × payees + 94,719` gas.
 
+## Measured: the cost of an on-chain note per payee
+
+Wrapping each transfer in Arc's `Memo` predeploy writes the payee's note
+permanently on-chain. Measured with `eth_estimateGas` on Arc testnet — rerun it
+with `python3 scripts/probe-memo.py`:
+
+| Per payee | Gas | At 20 Gwei |
+|---|---|---|
+| bare transfer | 46,291 | $0.000926 |
+| wrapped in `Memo` | 55,589 | $0.001112 |
+| **the note costs** | **9,299** | **$0.000186** |
+
+A 200-payee run goes from **$0.1854 to $0.2228** — 3.7 cents — and the ceiling in
+one block falls from ~647 to ~539 payees. `MAX_PAYEES` stays 500, so the cap is
+valid in both modes.
+
+The bare figure here re-measured at **46,291** against the **46,459** above. The
+0.4% gap is `eth_estimateGas` drift against a sent transaction, not a change in
+cost; neither number supersedes the other. `estimateRunGas(n, onChainNotes)` in
+`web/src/lib/chain.ts` carries both.
+
+Full write-up, including why `Memo` nesting inside `Multicall3From` had to be
+measured rather than read off the docs: `docs/memo.md`.
+
 ## Measured: a real 4-call batch on testnet (the `CallFrom` probe)
 
 One `aggregate3` containing 3 USDC transfers (one of them a deliberate
@@ -143,8 +167,9 @@ it, forge/cast inherit a wild priority-fee estimate (177 Gwei observed) and over
 
 **Hard ceiling: one run must fit in 30M gas** (Arc's per-block capacity).
 
-- theoretical max: **~642 payees**
-- **chunk above ~500** for headroom, since the base fee can rise and estimates aren't exact
+- theoretical max: **~642 payees** bare, **~539** with on-chain notes
+- **chunk above ~500** for headroom, since the base fee can rise and estimates aren't exact. 500
+  sits under the tighter of the two ceilings, so the cap never depends on whether notes are on
 
 The UI must enforce this, not discover it at submission time.
 

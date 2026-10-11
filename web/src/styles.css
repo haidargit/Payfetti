@@ -24,6 +24,10 @@ button:disabled { background:#c7c9d1; cursor:not-allowed; }
 .stat { background:#fff; border:1px solid var(--line); border-radius:9px; padding:11px 13px; }
 .stat span { display:block; font-size:11.5px; color:var(--mut); text-transform:uppercase; letter-spacing:.03em; }
 .stat strong { font-size:19px; }
+.opt { background:#fff; border:1px solid var(--line); border-radius:9px; padding:11px 13px; margin:12px 0; }
+.opt label { display:inline; font-weight:600; font-size:13.5px; }
+.opt input[type=checkbox] { width:auto; margin:0 2px 0 0; vertical-align:middle; }
+.opt p { margin:6px 0 0; }
 .muted { color:var(--mut); } .small { font-size:12.5px; } .big { font-size:17px; }
 .err { background:var(--errbg); color:var(--err); padding:11px 13px; border-radius:8px; margin:12px 0; }
 .warn { background:var(--warnbg); color:var(--warn); padding:9px 12px; border-radius:8px; margin:8px 0; font-size:13.5px; }

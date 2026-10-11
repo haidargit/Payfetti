@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
-import { keccak256, toHex, type Hex } from "viem";
-import { PAYFETTI_ADDRESS, USDC, payfettiAbi, txUrl } from "../lib/chain";
+import { decodeEventLog, encodeFunctionData, fromHex, keccak256, toHex, type Hex } from "viem";
+import { MEMO, PAYFETTI_ADDRESS, USDC, erc20Abi, memoAbi, payfettiAbi, txUrl } from "../lib/chain";
 import { formatUsdc } from "../lib/parse";
 
 /**
@@ -15,19 +15,29 @@ import { formatUsdc } from "../lib/parse";
  * Half 1 alone is NOT proof of payment: a payer could declare a run and send
  * nothing. The two are bound together by sharing one transaction hash, which is
  * what makes the pair unforgeable.
+ *
+ * A run sent with on-chain notes adds a third, independent reading: Arc's `Memo`
+ * event carries `keccak256(callData)`, so recomputing the transfer calldata and
+ * matching that hash proves the published note belongs to THIS transfer and not
+ * some other payee's. Its absence is not a failure — it only means the payer
+ * chose to keep notes off-chain.
  */
 
 type Check = "pending" | "pass" | "fail";
+type NoteCheck = "pending" | "pass" | "absent" | "fail";
 
 const TRANSFER_TOPIC = keccak256(toHex("Transfer(address,address,uint256)"));
 const RUN_RECORDED_TOPIC = keccak256(
   toHex("RunRecorded(address,bytes32,bytes32,uint256,uint32,string)"),
 );
+const MEMO_TOPIC = keccak256(toHex("Memo(address,address,bytes32,bytes32,bytes,uint256)"));
 
 export function Receipt() {
   const publicClient = usePublicClient();
   const [inclusion, setInclusion] = useState<Check>("pending");
   const [transfer, setTransfer] = useState<Check>("pending");
+  const [noteCheck, setNoteCheck] = useState<NoteCheck>("pending");
+  const [onChainNote, setOnChainNote] = useState<string | null>(null);
   const [hash, setHash] = useState<string | null>(null);
   const [when, setWhen] = useState<string | null>(null);
   const [problem, setProblem] = useState<string>("");
@@ -46,6 +56,7 @@ export function Receipt() {
         setProblem("This receipt link is missing required fields.");
         setInclusion("fail");
         setTransfer("fail");
+        setNoteCheck("fail");
         return;
       }
       try {
@@ -72,6 +83,7 @@ export function Receipt() {
 
         if (!run || run.blockNumber === 0n) {
           setTransfer("fail");
+          setNoteCheck("fail");
           setProblem("No such run is recorded on-chain.");
           return;
         }
@@ -89,6 +101,7 @@ export function Receipt() {
         );
         if (!mine?.transactionHash) {
           setTransfer("fail");
+          setNoteCheck("fail");
           setProblem("Could not locate the run's transaction.");
           return;
         }
@@ -115,10 +128,54 @@ export function Receipt() {
             "The run was declared, but no matching USDC transfer appears in that transaction.",
           );
         }
+
+        // ── third reading: the on-chain note, if the payer published one ──
+        // `callDataHash` is keccak256 of the exact inner calldata, so rebuilding
+        // `transfer(payee, amount)` and matching it ties the note to THIS payee.
+        const wantHash = keccak256(
+          encodeFunctionData({
+            abi: erc20Abi,
+            functionName: "transfer",
+            args: [payee, BigInt(amount)],
+          }),
+        ).toLowerCase();
+
+        const memoLogs = receipt.logs.filter(
+          (l) =>
+            l.address.toLowerCase() === MEMO.toLowerCase() &&
+            l.topics[0]?.toLowerCase() === MEMO_TOPIC &&
+            l.topics[3]?.toLowerCase() === runId.toLowerCase(),
+        );
+
+        if (memoLogs.length === 0) {
+          setNoteCheck("absent");
+        } else {
+          let matched: string | null = null;
+          for (const l of memoLogs) {
+            try {
+              const ev = decodeEventLog({ abi: memoAbi, data: l.data, topics: l.topics });
+              const a = ev.args as { callDataHash: Hex; memo: Hex };
+              if (a.callDataHash.toLowerCase() !== wantHash) continue;
+              matched = a.memo && a.memo !== "0x" ? fromHex(a.memo, "string") : "";
+              break;
+            } catch {
+              /* not a Memo log we can read */
+            }
+          }
+          if (matched === null) {
+            // Notes were published for this run, but none is bound to this
+            // transfer. Worth surfacing rather than quietly showing nothing.
+            setNoteCheck("fail");
+          } else {
+            setOnChainNote(matched);
+            setNoteCheck("pass");
+          }
+        }
       } catch (e: any) {
         setProblem(e?.shortMessage || e?.message || String(e));
         setInclusion("fail");
         setTransfer("fail");
+        setNoteCheck("fail");
       }
     })();
   }, [publicClient, payer, runId, payee, amount, memo]);
@@ -162,6 +219,15 @@ export function Receipt() {
             <th>Run</th>
             <td>{memo || "—"}</td>
           </tr>
+          {noteCheck === "pass" && (
+            <tr>
+              <th>Reason</th>
+              <td>
+                {onChainNote ? onChainNote : <span className="muted">(blank)</span>}{" "}
+                <span className="muted small">— read from the chain</span>
+              </td>
+            </tr>
+          )}
           <tr>
             <th>When</th>
             <td>{when ?? "—"}</td>
@@ -191,12 +257,38 @@ export function Receipt() {
           {transfer === "pass" ? "✅" : transfer === "fail" ? "❌" : "⏳"} A matching USDC transfer
           appears in that same transaction.
         </li>
+        <li>
+          {noteCheck === "pass"
+            ? "✅"
+            : noteCheck === "fail"
+              ? "❌"
+              : noteCheck === "absent"
+                ? "➖"
+                : "⏳"}{" "}
+          {noteCheck === "absent" ? (
+            <>
+              No on-chain note for this run. The payer kept the reason off-chain, which is allowed
+              and changes nothing about the two checks above.
+            </>
+          ) : noteCheck === "fail" ? (
+            <>
+              This run published notes, but none of them is bound to this transfer. Treat the reason
+              shown in the link as unverified.
+            </>
+          ) : (
+            <>
+              The published reason is cryptographically bound to this exact transfer, by{" "}
+              <code>callDataHash</code> in Arc's <code>Memo</code> event.
+            </>
+          )}
+        </li>
       </ul>
       <p className="muted small">
-        Both are required. A proof alone would only show the payer <em>declared</em> a payment,
-        the transfer log is what shows the money moved. They share one transaction hash, so neither
-        can be forged without the other. Verified directly against Arc; this page stores nothing and
-        asks you to trust no one.
+        The first two are what make this a payment. A proof alone would only show the payer{" "}
+        <em>declared</em> one, the transfer log is what shows the money moved. They share one
+        transaction hash, so neither can be forged without the other. The third is the payer's
+        stated reason, and a run without it is no less valid. Verified directly against Arc; this
+        page stores nothing and asks you to trust no one.
       </p>
     </main>
   );

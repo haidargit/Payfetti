@@ -134,6 +134,8 @@ Arc testnet, Oct 8 2026. A 50-payee run plus follow-up probes:
 | `markSkipped` with a very large payee list could exceed the block gas limit | Low | ~20k gas per payee; chunk the call |
 | Payee wallet loss / wrong address pasted by the payer | **High, and out of our control** | on-chain transfers are irreversible. The UI must make the preview and validation step hard to skip |
 | Merkle tree built in TS must match the contract's sorted-pair, double-hashed leaves exactly | Low | `scripts/keccak.py` is chain-verified, and `web/tests/merkle.test.ts` pins the TS tree against values the deployed contract accepted. Runs in CI |
+| **A smart-contract wallet cannot be a payer.** `CallFrom` allows only its allowlisted predeploys, so Safe and ERC-4337 accounts revert | Medium, **unfixable** | a protocol constraint, not our bug. Treasuries on a multisig cannot use Payfetti at all; say so rather than letting them discover it at submission. See `docs/memo.md` |
+| **On-chain notes are public and permanent**, and may carry personal data | Medium | per-run opt-out, on by default, with the consequence stated in the UI beside the switch. Notes are the payer's own text; we neither screen nor redact them |
 
 ## 7. Not done yet
 
@@ -141,7 +143,9 @@ Arc testnet, Oct 8 2026. A 50-payee run plus follow-up probes:
 - [ ] `forge coverage` report
 - [x] ~~Cross-implementation Merkle test: TypeScript tree vs. `scripts/keccak.py`~~ (`web/tests/merkle.test.ts`, runs in CI)
 - [x] ~~Testnet verification of `CallFrom` and transfer gas~~ (both confirmed Oct 8 2026)
-- [ ] Confirm whether `Memo` can nest inside `Multicall3From` (both require an EOA caller)
+- [x] ~~Confirm whether `Memo` can nest inside `Multicall3From`~~ → **it does**, measured on Arc
+  testnet Oct 11 2026. `docs/memo.md` has the cases, the controls that make them mean something,
+  and what `eth_call` still cannot prove. Reproduce with `python3 scripts/probe-memo.py`
 
 ## 8. Explicitly out of scope for v1
 

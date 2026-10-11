@@ -9,6 +9,21 @@ import type { Hex } from "viem";
 export const USDC = "0x3600000000000000000000000000000000000000" as const;
 export const MULTICALL3FROM = "0x522fAf9A91c41c443c66765030741e4AaCe147D0" as const;
 
+/**
+ * Arc's predeployed `Memo`. Wraps one call and emits a `Memo` event carrying
+ * `keccak256(callData)` plus arbitrary bytes, routing the inner call through the
+ * `CallFrom` precompile so the payer stays `msg.sender`.
+ *
+ * Nesting it inside `Multicall3From.aggregate3` is what lets one transaction
+ * carry N transfers each with its own on-chain note. Circle's docs describe the
+ * two contracts separately and never state that the combination works, so it was
+ * measured on Arc testnet rather than assumed: see `docs/memo.md`.
+ */
+export const MEMO = "0x5294E9927c3306DcBaDb03fe70b92e01cCede505" as const;
+
+/** The `CallFrom` precompile both predeploys route through. Read from `Memo.CALL_FROM()`. */
+export const CALL_FROM = "0x1800000000000000000000000000000000000003" as const;
+
 /** The ERC-20 view is 6 decimals, the native view 18. Never mix them. */
 export const USDC_DECIMALS = 6;
 
@@ -20,7 +35,18 @@ export const GAS_PER_PAYEE = 46_459n;
 export const GAS_BATCH_OVERHEAD = 39_096n;
 export const GAS_RECORD_RUN = 94_719n;
 
-/** Max payees in one transaction is ~642; we chunk well below it for headroom. */
+/**
+ * Wrapping each transfer in `Memo` costs 9,299 gas more per payee — $0.000186 at
+ * Arc's 20 Gwei floor, or 3.7c on a 200-payee run. Measured on Arc testnet with
+ * `eth_estimateGas`; the bare figure re-measured at 46,291 in the same run,
+ * 0.4% off the mainnet number above, which is the drift this method carries.
+ */
+export const GAS_PER_PAYEE_MEMO = 55_589n;
+
+/**
+ * Max payees in one 30M-gas transaction is ~647 bare, ~539 with memos. We cap
+ * well below the tighter of the two so the limit never depends on the mode.
+ */
 export const MAX_PAYEES = 500;
 
 /** Arc's floor. Below it a transaction is silently dropped. */
@@ -47,8 +73,9 @@ export const EXPLORER = isMainnet ? "https://explorer.arc.io" : "https://testnet
 export const txUrl = (hash: string) => `${EXPLORER}/tx/${hash}`;
 export const addressUrl = (addr: string) => `${EXPLORER}/address/${addr}`;
 
-export function estimateRunGas(n: number): bigint {
-  return GAS_BATCH_OVERHEAD + GAS_PER_PAYEE * BigInt(n) + GAS_RECORD_RUN;
+export function estimateRunGas(n: number, onChainNotes = false): bigint {
+  const perPayee = onChainNotes ? GAS_PER_PAYEE_MEMO : GAS_PER_PAYEE;
+  return GAS_BATCH_OVERHEAD + perPayee * BigInt(n) + GAS_RECORD_RUN;
 }
 
 /** Arc fees are USDC at 18-decimal native precision: cost = gas × price / 1e18. */
@@ -153,6 +180,45 @@ export const multicall3FromAbi = [
         ],
       },
     ],
+  },
+] as const;
+
+/**
+ * Taken from the verified source at `explorer.testnet.arc.io`, not hand-written.
+ *
+ * `memoId` is indexed, so setting it to the run's `runId` makes every note in a
+ * run retrievable with one `getLogs` call — which is why run history needs no
+ * indexer and no backend.
+ */
+export const memoAbi = [
+  {
+    type: "function",
+    name: "memo",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "target", type: "address" },
+      { name: "data", type: "bytes" },
+      { name: "memoId", type: "bytes32" },
+      { name: "memoData", type: "bytes" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "event",
+    name: "Memo",
+    inputs: [
+      { name: "sender", type: "address", indexed: true },
+      { name: "target", type: "address", indexed: true },
+      { name: "callDataHash", type: "bytes32", indexed: false },
+      { name: "memoId", type: "bytes32", indexed: true },
+      { name: "memo", type: "bytes", indexed: false },
+      { name: "memoIndex", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "error",
+    name: "MemoFailed",
+    inputs: [{ name: "returnData", type: "bytes" }],
   },
 ] as const;
 
