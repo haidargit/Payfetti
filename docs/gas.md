@@ -27,7 +27,7 @@
 
 ### The 50-payee row was sent, not estimated
 
-Arc testnet tx [`0x9ef59d48…28a79`](https://testnet.arcscan.app/tx/0x9ef59d48708e03aff07a5491ccc4f3996c752f1202abd37eba359850e7f28a79),
+Arc testnet tx [`0x9ef59d48…28a79`](https://explorer.testnet.arc.io/tx/0x9ef59d48708e03aff07a5491ccc4f3996c752f1202abd37eba359850e7f28a79),
 one `aggregate3` with 51 subcalls (50 transfers + `recordRun`), 13,284 bytes of calldata:
 
 | | |

@@ -1,0 +1,131 @@
+{
+  "network": "testnet",
+  "chainId": 5042002,
+  "explorer": "https://explorer.testnet.arc.io",
+  "payfetti": "0x7dacb26f14af8e844dabbb2dba1d31427204f835",
+  "payer": "0x8d026a62f466f7c457be8e3e139c701b791e668e",
+  "runId": "0xcc88edf54ee8b779a6fa70756f6b89eca3f152339cb50601079a2b0f0a09c29b",
+  "noteHash": "0x42b64fb2dab780d1da04b96fdb1564ba66b29d287d6ee180c8fb8f712b9e5d11",
+  "root": "0x493ea0cb181b651e259a1446d001e332ecf745bef5e6bcd7ab172551c2ad6ce2",
+  "memo": "Payfetti on-chain notes demo",
+  "total": 9028,
+  "count": 9,
+  "onChainNotes": true,
+  "estimatedGas": 585614,
+  "rows": [
+    {
+      "payee": "0x84332565237c0d1210642492712abdc1f4d198ba",
+      "amount": 1000,
+      "note": "payee #1",
+      "index": 0,
+      "leaf": "0xeb5ea366e71103ef84db7ede7151e5295de7b3fd4236e0540d9be3d97b504efc",
+      "proof": [
+        "0xae9621c6800eef219973357867c6e2164bac226cf1c4c5d8354f3add48b0a46b",
+        "0x7ec5816fc138190b6c7fee6f6e093385ff535a92a800732bb746d5c3f91214a1",
+        "0x9acc8de847db65e2019e58a63db11b85eb10589c0070f045e429f1a869e8d693",
+        "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13"
+      ]
+    },
+    {
+      "payee": "0xe38662b33eeafe7124a9e4d6e194c5ebfcce140d",
+      "amount": 1001,
+      "note": "payee #2",
+      "index": 1,
+      "leaf": "0xae9621c6800eef219973357867c6e2164bac226cf1c4c5d8354f3add48b0a46b",
+      "proof": [
+        "0xeb5ea366e71103ef84db7ede7151e5295de7b3fd4236e0540d9be3d97b504efc",
+        "0x7ec5816fc138190b6c7fee6f6e093385ff535a92a800732bb746d5c3f91214a1",
+        "0x9acc8de847db65e2019e58a63db11b85eb10589c0070f045e429f1a869e8d693",
+        "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13"
+      ]
+    },
+    {
+      "payee": "0xe6a5afd01d1c73f39d11ec59d9a3574bf620fa2a",
+      "amount": 1002,
+      "note": "payee #3",
+      "index": 2,
+      "leaf": "0xe019f780c06516e173e4c8f327ee270881f2fa0f2b7e2c499fca40fa34763eef",
+      "proof": [
+        "0x993fe2bc1b9a97624fe136955598b0bf1a89740a02acfa6401d679df4edacd5c",
+        "0x14f6f52b5eb8e8220f3d7c045d8e1d7be667b757b95a2343239935140f4b0d55",
+        "0x9acc8de847db65e2019e58a63db11b85eb10589c0070f045e429f1a869e8d693",
+        "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13"
+      ]
+    },
+    {
+      "payee": "0xe8a24e459e3a8fa5a7e50529d1a065fb33989ed0",
+      "amount": 1003,
+      "note": "payee #4",
+      "index": 3,
+      "leaf": "0x993fe2bc1b9a97624fe136955598b0bf1a89740a02acfa6401d679df4edacd5c",
+      "proof": [
+        "0xe019f780c06516e173e4c8f327ee270881f2fa0f2b7e2c499fca40fa34763eef",
+        "0x14f6f52b5eb8e8220f3d7c045d8e1d7be667b757b95a2343239935140f4b0d55",
+        "0x9acc8de847db65e2019e58a63db11b85eb10589c0070f045e429f1a869e8d693",
+        "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13"
+      ]
+    },
+    {
+      "payee": "0x75812fb307e38b14f366de816ad338bd626eeb05",
+      "amount": 1004,
+      "note": "payee #5",
+      "index": 4,
+      "leaf": "0xa1612716e59a458c6f607233acd6aab28132ba394f82158d32569e819a7d6705",
+      "proof": [
+        "0x8aaca4d5589151841fe5ba931d96ff6b5e4532b9085a5aeb0f8f29006489ccfc",
+        "0x50afcea0e477eaa7fdaef63ddd738bc5b93a9e3a0857e01d617d032341842f22",
+        "0x94755400b3fd2ebc637ad7292aa2d2e8d784cc9f1f1e48a47dad410bee137db3",
+        "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13"
+      ]
+    },
+    {
+      "payee": "0x77f1fd570d60c57ce669c3f30e9942624edb297c",
+      "amount": 1005,
+      "note": "payee #6",
+      "index": 5,
+      "leaf": "0x8aaca4d5589151841fe5ba931d96ff6b5e4532b9085a5aeb0f8f29006489ccfc",
+      "proof": [
+        "0xa1612716e59a458c6f607233acd6aab28132ba394f82158d32569e819a7d6705",
+        "0x50afcea0e477eaa7fdaef63ddd738bc5b93a9e3a0857e01d617d032341842f22",
+        "0x94755400b3fd2ebc637ad7292aa2d2e8d784cc9f1f1e48a47dad410bee137db3",
+        "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13"
+      ]
+    },
+    {
+      "payee": "0x98b5cd08e500e1931bf13a06fb3323e5ff6e5801",
+      "amount": 1006,
+      "note": "payee #7",
+      "index": 6,
+      "leaf": "0x53e0a07307c2a3853e0de36677def704591fde1369c3a25ce4fdfd74adeeaddb",
+      "proof": [
+        "0x40761265c2ef7ecdb93ac34abeae3ec038259920b12cf4ac812861c59472ae7f",
+        "0x1bdb841dd6570f7f0c3b397750c5205a380f01bff8a324fc98921784f6b05aa2",
+        "0x94755400b3fd2ebc637ad7292aa2d2e8d784cc9f1f1e48a47dad410bee137db3",
+        "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13"
+      ]
+    },
+    {
+      "payee": "0xd7dcd94b64f43bcfaa86152677b0c62ef8f63658",
+      "amount": 1007,
+      "note": "payee #8",
+      "index": 7,
+      "leaf": "0x40761265c2ef7ecdb93ac34abeae3ec038259920b12cf4ac812861c59472ae7f",
+      "proof": [
+        "0x53e0a07307c2a3853e0de36677def704591fde1369c3a25ce4fdfd74adeeaddb",
+        "0x1bdb841dd6570f7f0c3b397750c5205a380f01bff8a324fc98921784f6b05aa2",
+        "0x94755400b3fd2ebc637ad7292aa2d2e8d784cc9f1f1e48a47dad410bee137db3",
+        "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13"
+      ]
+    },
+    {
+      "payee": "0x0000000000000000000000000000000000000000",
+      "amount": 1000,
+      "note": "DELIBERATELY BAD \u2014 zero address, Arc always reverts this",
+      "index": 8,
+      "leaf": "0xe9f4bf04e101c79383618a0a7de5075afeadb3228910a6e2261640113ceaea13",
+      "proof": [
+        "0x9939f2a4f2213ebf86fa15c4e49e24713ae0f96e29c648c268c5adf392ba521b"
+      ]
+    }
+  ]
+}

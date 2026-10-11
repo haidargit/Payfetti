@@ -65,16 +65,50 @@ what makes the four passes above evidence rather than an artefact. The refusals
 also reveal the actual rule: `CallFrom` allows only its allowlisted predeploys,
 never an EOA directly.
 
+## Confirmed by a signed transaction
+
+The simulation above was then executed for real on Arc testnet — 9 payees, one of
+them a deliberate zero-address row:
+
+[`0x152d39be…c214bfe`](https://explorer.testnet.arc.io/tx/0x152d39bebed27babe795bdf1132a90292029e0c3e3e78e0d10ec7e469c214bfe)
+· status 1 · **579,845 gas** · 20 Gwei · **$0.011597**
+
+33 logs, which decompose exactly as the design predicts:
+
+| Event | Count | |
+|---|---|---|
+| USDC `Transfer` (6-dec emitter) | 8 | the bad row did not pay |
+| `Memo` | 8 | one note per successful payment |
+| `BeforeMemo` | 8 | |
+| `RunRecorded` | 1 | |
+| system emitter (18-dec) | 8 | Arc's EIP-7708 duplicate, correctly ignored |
+
+**`allowFailure` still isolates through the `Memo` wrapper.** This was the part no
+amount of reading could settle. The zero-address row reverted *inside* `Memo`,
+`allowFailure: true` caught it, and it left **no stray `Memo` event** — 8 payments
+and 8 notes, perfectly aligned. A failed payee cannot leave an orphaned note
+claiming they were paid.
+
+**Every note is bound to its own payment.** All 8 `Memo` events carry `memoId ==
+runId`, and recomputing `keccak256(transfer(payee, amount))` for each row matches
+`callDataHash` **8 out of 8**. A note cannot be moved onto a different payee or a
+different amount.
+
+The estimate was 585,614 against 579,845 actual — **1.0% over**, consistent with
+the ~1.5% estimator accuracy recorded in `docs/gas.md`.
+
+One surprise worth knowing: `memoIndex` is a **chain-wide** counter, not per-run
+(this run drew 787,307–787,314). It orders memos globally and is not a per-run
+sequence number, so do not treat it as one.
+
 ### What is still unproven
 
 `eth_call` cannot show that a *contract* payer would be rejected, because it
-treats any `from` as an origin. Circle's source comment already states this, and
-Payfetti's payer is always an EOA, so it does not affect us. It does mean
-**smart-contract wallets — Safe, ERC-4337 — cannot be a Payfetti payer**, which
-is a protocol constraint, not an implementation gap. See `docs/security.md`.
-
-A signed transaction would be the final word. The `eth_call` result plus the
-working controls is what is claimed here, and nothing stronger.
+treats any `from` as an origin, and the signed transaction above was sent from an
+EOA, so it does not test that path either. Circle's source comment states it
+directly, and Payfetti's payer is always an EOA. It does mean **smart-contract
+wallets — Safe, ERC-4337 — cannot be a Payfetti payer**, which is a protocol
+constraint, not an implementation gap. See `docs/security.md`.
 
 ## Cost
 
@@ -110,9 +144,33 @@ Multicall3From.aggregate3([
 ])
 ```
 
-`memoId` is the run's own `runId`. Because the `Memo` event indexes it, one
-`getLogs` filtered on that topic returns **every note in a run** — which is why
-run history needs no indexer, no backend and no browser storage.
+`memoId` is the run's own `runId`. Because the `Memo` event indexes it, **once you
+know a run's id** its notes come back from a single-block `getLogs` — O(1), no
+indexer and no backend.
+
+### Lookup is not discovery
+
+Measured after the fact, and it corrects an earlier claim in this file: Arc's
+public RPC **refuses `getLogs` ranges even 10,000 blocks wide**
+(`requested range too large`), and at sub-second blocks the testnet is already
+~66M blocks deep. Scanning for a payer's past runs is therefore not possible on
+this RPC at any useful depth.
+
+Blockscout is not a dependable substitute either. Its
+`/api/v2/addresses/{addr}/logs` endpoint returned **one** `RunRecorded` for our
+contract when the chain holds two — the Oct 8 run was missing, although the
+transaction itself is indexed. An incomplete history that looks complete is worse
+than none, so nothing in Payfetti depends on it.
+
+Its **transaction** list, by contrast, was complete — all three of our runs — so
+discovery reads that, and every result is re-verified against Arc before being
+shown.
+
+What follows is a design constraint, not a bug: the chain can prove **any run you
+can name**, but it will not tell you **which runs were yours**. A discovery source
+is therefore always a hint, and an omission by one is undetectable. The durable
+copy is an exported run file; the chain is what makes it trustworthy. Browser
+storage is deliberately not used — see `docs/architecture.md`.
 
 Both modes emit the same `Transfer(payer → payee)` log, since `CallFrom` keeps
 the payer as `msg.sender`. A receipt therefore verifies identically either way,

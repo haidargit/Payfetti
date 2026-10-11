@@ -68,7 +68,7 @@ export const RPC_URL =
   import.meta.env.VITE_RPC_URL ??
   (isMainnet ? "https://rpc.mainnet.arc.io" : "https://rpc.testnet.arc.io");
 
-export const EXPLORER = isMainnet ? "https://explorer.arc.io" : "https://testnet.arcscan.app";
+export const EXPLORER = isMainnet ? "https://explorer.arc.io" : "https://explorer.testnet.arc.io";
 
 export const txUrl = (hash: string) => `${EXPLORER}/tx/${hash}`;
 export const addressUrl = (addr: string) => `${EXPLORER}/address/${addr}`;

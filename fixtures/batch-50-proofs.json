@@ -1,7 +1,7 @@
 {
   "network": "testnet",
   "chainId": 5042002,
-  "explorer": "https://testnet.arcscan.app",
+  "explorer": "https://explorer.testnet.arc.io",
   "payfetti": "0x7dacb26f14af8e844dabbb2dba1d31427204f835",
   "payer": "0x8d026a62f466f7c457be8e3e139c701b791e668e",
   "runId": "0x9d13c6b61ad68155216d8383eac9107920b9a6a21275ba6de22c6af5d36f0581",

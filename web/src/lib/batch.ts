@@ -51,9 +51,15 @@ export function newRunId(label?: string): Hex {
 }
 
 /**
- * `memoId` is the run's own `runId`. The `Memo` event indexes it, so one
- * `getLogs` filtered on that topic returns every note in the run — which is how
- * run history works with no indexer, no backend and no browser storage.
+ * `memoId` is the run's own `runId`. The `Memo` event indexes it, so once you
+ * know a run's id its notes come back from a single-block `getLogs` — O(1), no
+ * indexer, no backend.
+ *
+ * That is lookup, not discovery. Arc's public RPC refuses `getLogs` ranges even
+ * 10,000 blocks wide, and at sub-second blocks the chain is already ~66M blocks
+ * deep, so enumerating a payer's past runs by scanning is not possible here.
+ * Discovery reads the explorer's transaction list and re-verifies each hit
+ * against Arc; the durable copy is an exported run file. See docs/architecture.md.
  */
 export function buildRun(
   parsed: ParsedRow[],

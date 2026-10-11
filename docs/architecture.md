@@ -76,15 +76,40 @@ point of this document.
 
 | Stage | Run history | Needs a backend? |
 |---|---|---|
-| **v1 (now)** | `localStorage` on the device that created the run + a downloadable run file | no |
-| **v1.5** | paginated `eth_getLogs` filtered by the indexed `payer` topic, from the contract's deploy block, cached locally | no |
+| **v1 (now)** | the explorer's transaction list for discovery, the chain for truth, a downloadable run file for durability | no |
 | **v2** | an indexer for instant cross-device history | yes, as a cache, never as the record |
 
-**v1's honest limitation:** clear your browser and the *list* is gone. The runs
-themselves are not: they are on Arc, and every receipt link still verifies. This is
-why the app also offers an **export** of the run (payees, amounts, proofs, tx hash):
-for a researcher who must show an ethics board what was paid, a signed-by-the-chain
-JSON file they keep is arguably better than a row in a vendor's database.
+**The v1.5 that does not exist.** An earlier version of this table proposed
+paginated `eth_getLogs` filtered by the indexed `payer` topic. That was tested on
+Oct 11 2026 and **it does not work**: Arc's public RPC refuses `getLogs` ranges
+even 10,000 blocks wide (`requested range too large`), and at sub-second blocks
+the testnet is already ~66M blocks deep. Log scanning is not a path on this RPC at
+any useful depth, so the stage is deleted rather than left as a plan nobody
+retested.
+
+**Discovery and verification are different problems**, and only the second one is
+solved by the chain:
+
+| | How | If it fails |
+|---|---|---|
+| *Which runs were mine?* | the explorer's transaction list, or a run file you exported | you see an incomplete list |
+| *Is this run real, and what did it pay?* | `getRun` + that block's logs, O(1), straight from Arc | it cannot fail silently; a bad run does not verify |
+
+The chain proves **any run you can name**. It cannot tell you **which runs were
+yours** — there is no "what am I missing?" query. So a discovery source is always
+a *hint*, re-verified against Arc before anything is shown, and an omission by
+that source is undetectable. We measured one: Blockscout's
+`/addresses/{addr}/logs` returned one `RunRecorded` when the chain held two. Its
+transaction list was complete, which is why discovery reads that instead.
+
+That is the whole argument for the **export file** (payees, amounts, proofs, tx
+hash). It is the only durable record the user holds themselves. For a researcher
+who must show an ethics board what was paid, a JSON file the chain can re-verify
+beats a row in a vendor's database.
+
+**Browser storage is deliberately not used.** It would only cache a list of run
+ids that are already public on-chain, saving one request in exchange for a cache
+that can go stale and a caveat to explain. Not worth it.
 
 ## When a backend genuinely becomes necessary
 
