@@ -1,0 +1,60 @@
+export const meta = {
+  title: "What a receipt proves",
+  group: "How it works",
+  order: 2,
+  summary: "Two halves that share one transaction hash, and what neither one proves alone.",
+};
+
+# What a receipt proves
+
+A receipt is two things at once. Either on its own proves very little; together
+they cannot be forged.
+
+## Half one: the inclusion proof
+
+A Merkle proof that the payer committed on-chain to paying **this address this
+exact amount** in this run. It is checked by `verifyInclusion`, a `view`
+function, so the check costs nothing and needs no wallet.
+
+On its own this only shows the payer *declared* a payment. A payer could record
+a root and send nothing.
+
+## Half two: the transfer log
+
+A USDC `Transfer(payer → payee, amount)` log sitting in the **same transaction**
+as the run's `RunRecorded` event. This is what shows the money actually moved.
+
+Because `recordRun` and the transfers are subcalls of one `aggregate3`, they
+cannot be separated. A fabricated declaration has no matching transfer, and a
+stray transfer has no committed amount to check against.
+
+The verifier filters to the 6-decimal ERC-20 emitter (`0x3600…0000`). Arc's
+system emitter logs the same transfer at 18 decimals, and counting both would
+double-count a single payment.
+
+## The third reading: an on-chain note
+
+If the run published notes, Arc's `Memo` event carries `keccak256(callData)`.
+Recomputing `transfer(payee, amount)` and matching that hash proves the
+published reason belongs to *this* transfer and not some other payee's row.
+
+Its absence is not a failure. It only means the payer kept the reasons
+off-chain, which is allowed and changes nothing about the two checks above.
+
+## What it does not prove
+
+- **Not that the amount was fair, owed, or agreed.** It proves what was sent.
+- **Not the payer's identity.** It proves which address paid.
+- **Not that no other payment exists.** A receipt speaks for one run.
+
+## Verifying without this website
+
+The receipt link contains everything needed, and the repo ships a
+dependency-free Python verifier, including a Keccak-256 implementation written
+from scratch, so nothing about the check requires trusting us:
+
+```bash
+python3 scripts/verify-run.py \
+  --tx 0x9ef59d48708e03aff07a5491ccc4f3996c752f1202abd37eba359850e7f28a79 \
+  --proofs fixtures/batch-50-proofs.json
+```

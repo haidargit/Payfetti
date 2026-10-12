@@ -1,0 +1,61 @@
+export const meta = {
+  title: "Honest limits",
+  group: "Reference",
+  order: 2,
+  summary: "What this does not do, and which of those are fixable.",
+};
+
+# Honest limits
+
+## Payees need a wallet address
+
+This is the real ceiling on reach, and v1 does not solve it. Email claim links,
+passkey wallets and local cash-out are phase two, not something hiding behind a
+flag today.
+
+## The payer must be an EOA
+
+`CallFrom` accepts only its allowlisted predeploys, so a Safe or an ERC-4337
+smart account **cannot pay through Payfetti at all**. That is a protocol
+constraint rather than something a later version patches, and it rules out
+multisig treasuries. Measured, not inferred.
+
+## Your past runs cannot be listed
+
+Arc's public RPC refuses wide `getLogs` ranges, so there is no way to enumerate
+the runs an address has made. The chain proves any run you can name; it will not
+tell you which ones were yours.
+
+This is why exporting the run file is part of the flow rather than a
+convenience. Lose it and the payment is still final and still real, but your
+payees lose the proofs.
+
+## An on-chain note is public forever
+
+We neither screen nor redact what a payer types. Turn notes off for anything
+identifying.
+
+## No fee, no screening
+
+v1 charges nothing and performs no compliance screening. Arc enforces USDC
+blocklists at the protocol level, so a transfer to a screened address simply
+reverts and shows up as a skipped payee.
+
+## A receipt is not a contract
+
+It proves a payment was committed to and made. It does not prove the amount was
+fair, owed, or agreed, and it does not prove the payer's identity beyond their
+address.
+
+## This does not create work
+
+Payfetti makes paying for work that already exists possible, which is one layer
+below a marketplace. If nobody wants to pay 200 people $1, this changes nothing.
+
+## Still outstanding
+
+- Deployed and verified on Arc mainnet
+- An end-to-end 50-payee mainnet run
+
+The testnet deployment is live and its source is verified on the explorer, so
+the readable Solidity there is provably the bytecode actually running.

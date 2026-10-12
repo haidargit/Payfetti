@@ -1,0 +1,59 @@
+export const meta = {
+  title: "How a run works",
+  group: "How it works",
+  order: 1,
+  summary: "One aggregate3 call, N transfers, and a record that cannot be separated from them.",
+};
+
+# How a run works
+
+A run is exactly one transaction:
+
+```
+Multicall3From.aggregate3([
+  USDC.transfer(payee_i, amount_i) × N,   // allowFailure: true
+  Payfetti.recordRun(runId, root, …)      // allowFailure: false
+])
+```
+
+## Why the contract rides inside the batch
+
+`Multicall3From` only accepts calls from an EOA, so Payfetti cannot wrap it.
+Instead `recordRun` is the last call *inside* the batch. Because Arc's
+`CallFrom` precompile preserves the original sender per subcall, `recordRun`
+sees the payer as `msg.sender`, and the record is self-authenticating: a run is
+always attributed to whoever actually signed, never to an address passed in as
+an argument.
+
+This is also why there is no `approve` step and no custody. The USDC moves from
+your wallet to each payee directly. The Payfetti contract has no token logic at
+all, so a bug in it cannot lose funds; the worst case is a wrong record.
+
+## Why failures are isolated
+
+`allowFailure: true` on every transfer is mandatory. Arc enforces USDC
+blocklists at the protocol level, so a transfer to a screened address reverts.
+Without per-call isolation, one bad address would destroy a 200-payee run.
+
+`allowFailure: false` on `recordRun` is the other half: a reused `runId` reverts
+the whole batch, so the transfers never execute. **A resubmitted run cannot
+double-pay.**
+
+## What the contract stores
+
+| Field | Purpose |
+| --- | --- |
+| `payeeRoot` | Merkle root over every `(payee, amount, noteHash)` |
+| `total`, `count` | display metadata, not verified against the leaves |
+| `recordedAt` | when the run was mined |
+| `blockNumber` | lets a receipt skip log scanning entirely |
+
+Storing the block number is what makes receipt lookup O(1) rather than a scan
+across millions of blocks, and it is a large part of why no indexer is needed.
+
+## Skipped payees
+
+Which transfers reverted is only knowable once the batch is mined, so recording
+them is a second, optional transaction: `markSkipped(runId, payees)`. It writes
+the failures into the registry, so a payee checking their receipt is told they
+were skipped rather than shown a proof that fails for reasons they cannot see.

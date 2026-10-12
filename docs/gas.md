@@ -47,7 +47,7 @@ Reproduce the verification with `scripts/verify-run.py`.
 | Function | Gas (median) | Gas (max) | Cost @ 20 Gwei | Notes |
 |---|---|---|---|---|
 | `recordRun` | 93,873 | 94,719 | **~$0.0019** | one fresh `Run` struct, 3 SSTOREs |
-| `markSkipped` | 25,076 | 73,631 | ~$0.0005–0.0015 | scales with list length |
+| `markSkipped` | 25,076 | 73,631 | ~$0.0005–0.0015 | scales with list length. **Executed on Arc testnet Oct 12 2026**: one payee, 50,091 gas, $0.001002, estimate 0.8% high |
 | `verifyInclusion` | 3,564 | 4,160 | **$0** | `view` → free over `eth_call` |
 | `getRun` | 7,379 | n/a | **$0** | `view` |
 | `leafOf` | 731 | n/a | **$0** | `pure` |

@@ -38,6 +38,9 @@ don't pay them $2 and grumble. You never make the offer.
 6. Each payee gets a receipt URL proving their own payment
 7. Optionally, each payee's note is written on-chain, so the reason for a payment
    outlives the link and a recipient can look themselves up
+8. Export the run file: every receipt link and proof in one JSON, which is the
+   only durable copy there is
+9. Skipped payees can be recorded on-chain and retried as their own run
 
 ## Why Arc
 
@@ -216,7 +219,7 @@ one feature where it genuinely costs us something.
 
 ## Stack
 
-Solidity 0.8.24 · Foundry · React 18 + TypeScript + Vite · wagmi + viem · ConnectKit
+Solidity 0.8.24 · Foundry · React 18 + TypeScript + Vite · wagmi + viem · MDX
 
 The verifier scripts are dependency-free Python, including a Keccak-256
 implementation written from scratch, so a reviewer can check every claim with
@@ -259,11 +262,13 @@ fixtures/               Merkle proofs for both testnet runs, with and without no
 - [x] Deployed to Arc testnet, bytecode matching source
 - [x] `CallFrom`, `allowFailure`, receipts and idempotency verified on-chain
 - [x] 50-payee run executed: 49 paid, 1 skipped, $0.0477
-- [x] Frontend: create and receipt flows
+- [x] Frontend: create, receipt, run-file export and skip recording
 - [x] `Memo` nesting inside `Multicall3From` confirmed by a signed transaction, with
       `allowFailure` isolation and note binding both verified
 - [x] 9-payee memo run executed: 8 paid with on-chain notes, 1 skipped, $0.0116
 - [x] Source verified on the block explorer — readable Solidity, not bytecode
+- [x] `markSkipped` executed on-chain: the failed row flipped to skipped, a paid
+      payee did not. **Every function in the contract has now run on a real chain**
 - [ ] Deployed and verified on Arc mainnet
 - [ ] Frontend hosted
 - [ ] End-to-end 50-payee mainnet run

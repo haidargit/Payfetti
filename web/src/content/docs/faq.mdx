@@ -1,0 +1,60 @@
+export const meta = {
+  title: "FAQ",
+  group: "Reference",
+  order: 3,
+  summary: "Custody, double-paying, failed rows, and what happens if this site disappears.",
+};
+
+# FAQ
+
+## Does Payfetti ever hold my money?
+
+No. The contract has no token logic: no transfers, no approvals, no balances,
+and it is not `payable`. USDC moves from your wallet to each payee inside Arc's
+`Multicall3From`, and Payfetti only writes the record beside it. A bug in the
+contract cannot lose funds.
+
+## Can a double-click pay everyone twice?
+
+No. `recordRun` rejects a `runId` it has already seen, and it runs with
+`allowFailure: false`, so a resubmitted batch reverts in full and the transfers
+never execute.
+
+## What happens when one payee's transfer fails?
+
+The rest still go through. Arc enforces USDC blocklists at the protocol level,
+so a screened address reverts; `allowFailure: true` keeps that from taking down
+the run. The failed rows are shown as skipped, can be recorded on-chain, and can
+be retried as their own run.
+
+## Is there an approval step?
+
+No. `CallFrom` preserves `msg.sender` through the batch, so no allowance is ever
+granted to anything.
+
+## Do you store my payee list?
+
+No. There is no backend and no database, because the chain is the store. The list never
+leaves your browser except as the transaction you sign.
+
+## What if this website disappears?
+
+Your payments are already final and already on-chain. Receipts are verifiable
+with the repo's Python verifier, which depends on nothing but `python3` and
+`curl`, and the contract's source is verified on the explorer. The run file you
+export carries every proof.
+
+## Can I use a Safe or a smart account?
+
+Not today, and not in a later version either: `CallFrom` accepts only EOAs. See
+[Honest limits](#/docs/limits).
+
+## How many people can one run pay?
+
+The app caps a run at 500. The hard ceiling is Arc's 30M gas block, around 642
+payees, and the cap sits below it so the limit does not change depending on
+whether notes are on.
+
+## Is this affiliated with Circle?
+
+No. Payfetti is an independent project built on Arc for Arc Microgrants.

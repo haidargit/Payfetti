@@ -1,0 +1,65 @@
+export const meta = {
+  title: "Getting started",
+  group: "Start here",
+  order: 1,
+  summary: "From an empty list to paid payees, in one transaction.",
+};
+
+# Getting started
+
+Payfetti pays a list of people in one transaction and gives each of them a
+receipt they can verify against the chain themselves. There is no account to
+make, no backend to trust, and the contract never holds your money.
+
+> New here, or about to pay real people? Do a dry run first:
+> [Rehearse on testnet](#/docs/testnet). Nothing in a run can be undone.
+
+## What you need
+
+- A wallet with USDC on Arc, which covers both the payouts and the fees.
+- A list of payees, one per line: `address, amount, note`.
+- An **externally owned account**. Arc's `CallFrom` precompile only accepts
+  EOAs, so a Safe or an ERC-4337 smart account cannot pay through Payfetti at
+  all. See [Honest limits](#/docs/limits).
+
+## Four steps
+
+1. **Name the run.** The label is written on-chain and shown on every receipt.
+2. **Paste your rows.** Commas, tabs or semicolons all work. Lines starting
+   with `#` and blank lines are ignored, and a header row like
+   `address,amount,note` is skipped.
+3. **Check the quote.** The panel shows the exact fee at the quoted gas price,
+   with what the same list would cost on card, ACH and wire beneath it.
+4. **Sign once.** Every transfer and the run record go into a single
+   transaction.
+
+## A list that works
+
+```
+# address, amount, note
+0x7061796665747469000000000000000000000001, 1.50, participant 001
+0x7061796665747469000000000000000000000002, 1.50, participant 002
+0x7061796665747469000000000000000000000003, 2.00, participant 003
+```
+
+Everything after the second separator is the note, so notes may contain commas.
+
+## What is checked before you sign
+
+A transfer cannot be undone, so validation happens before anything is signed,
+not after:
+
+| Check | Why |
+| --- | --- |
+| Address is valid | a typo is a payment you cannot recall |
+| Not the zero address | Arc always reverts a non-zero transfer to `0x0` |
+| Amount is above zero | and no more than six decimal places, which USDC cannot represent |
+| Duplicates flagged | the same address twice means that person is paid twice |
+| Total against your balance | payouts plus fees, compared in one decimal space |
+| Run fits in a block | Arc's 30M gas limit caps a run at roughly 642 payees |
+
+## After the run
+
+Export the run file. The Merkle proofs exist only in the receipt links, and
+Arc's public RPC cannot enumerate your past runs, so that file is the durable
+copy. See [What a receipt proves](#/docs/receipts).
