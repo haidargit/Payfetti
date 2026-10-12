@@ -1,0 +1,65 @@
+export const meta = {
+  title: "On-chain notes",
+  group: "How it works",
+  order: 3,
+  summary: "Arc's Memo predeploy, nested inside the batch, and what it costs.",
+};
+
+# On-chain notes
+
+With notes on, each transfer is wrapped in Arc's `Memo` predeploy inside the
+same batch:
+
+```
+Memo.memo(USDC, transfer(payee_i, amount_i), runId, note_i)
+```
+
+The payee's reason is then written to Arc permanently, and a recipient can find
+their own payment without a link from anyone.
+
+## Why this works at all
+
+Circle documents `Multicall3From` and `Memo` separately and never states that
+one works inside the other. We measured it rather than assumed it, with a signed
+transaction on Arc testnet. `Memo` routes through the same `CallFrom`
+precompile, so the payer stays `msg.sender` and the `Transfer` log is identical
+either way. **A receipt verifies the same in both modes, and the Merkle root is
+unchanged.**
+
+Reproduce the result yourself, read-only:
+
+```bash
+python3 scripts/probe-memo.py
+```
+
+Two of its six cases are controls that must *fail*. `eth_call` sets `tx.origin`
+to whatever caller you name, so it cannot tell an EOA from a contract, and an
+earlier version of this probe drew a false conclusion from exactly that.
+
+## What it costs
+
+| | Gas per payee | At Arc's 20 Gwei floor |
+| --- | --- | --- |
+| Bare transfer | 46,459 | $0.00093 |
+| Wrapped in `Memo` | 55,589 | $0.00111 |
+| **The note itself** | **9,299** | **$0.000186** |
+
+About 20% more gas, which is 3.7 cents on a 200-payee run.
+
+## Lookup, not discovery
+
+`memoId` is the run's own `runId`, and the `Memo` event indexes it, so once you
+know a run's id every note in it comes back from a **single-block** `getLogs`.
+That is O(1), with no indexer and no backend.
+
+It is not discovery. Arc's public RPC refuses `getLogs` ranges even 10,000
+blocks wide, and at sub-second blocks the testnet is already around 66M blocks
+deep, so enumerating a payer's past runs by scanning is not possible on this
+RPC. The chain proves any run you can name; it will not tell you which runs were
+yours.
+
+## Think before turning it on
+
+An on-chain note is **public and permanent**. We neither screen nor redact what
+a payer types. It is on by default because the market this was built for writes
+"participant 001". Turn it off for anything identifying.

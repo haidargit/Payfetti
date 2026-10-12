@@ -1,0 +1,73 @@
+export const meta = {
+  title: "Every cost, measured",
+  group: "Reference",
+  order: 1,
+  summary: "What a run costs on Arc, how it was measured, and what it replaces.",
+};
+
+# Every cost, measured
+
+Every figure here was measured on Arc, not estimated, and every one is
+reproducible from the repo without a wallet or a cent of real money:
+
+```bash
+python3 scripts/measure-gas.py
+```
+
+## Per payee
+
+| | Gas | Cost at 20 Gwei |
+| --- | --- | --- |
+| Batch overhead, once | 39,096 | $0.00078 |
+| `recordRun`, once | 94,719 | $0.00189 |
+| Each payee | 46,459 | **$0.00093** |
+| Each payee, with an on-chain note | 55,589 | $0.00111 |
+
+The per-payee figure falls as the batch grows, because the fixed overhead
+amortises.
+
+## By batch size
+
+| Payees | On Arc | The same payout by card |
+| --- | --- | --- |
+| 50 | **$0.048** (executed, not estimated) | $15–25 |
+| 200 | **$0.189** | $60–100 |
+| 500 | **$0.467** | $150–250 |
+
+## Against the incumbent rails
+
+| Rail | Fee per payment |
+| --- | --- |
+| International wire | $10–15 |
+| Card interchange | $0.25–0.50 |
+| ACH | ~$0.25 |
+| **Arc** | **$0.00093** |
+
+Those are each rail's published per-payment fee, not a benchmark we ran. The
+point is the floor: below roughly $2, the fee eats the payment, so on every
+conventional rail the payment usually does not happen at all. That floor is not
+a tax, it is a hiring filter. If paying someone $2 costs $12, you never make the
+offer.
+
+## Two Arc specifics that bite
+
+**Gas price has a floor.** Arc's minimum base fee is 20 Gwei, and a transaction
+below it is dropped with no error and no receipt. The app quotes at the live
+price but never below the floor.
+
+**USDC has two decimal views.** The ERC-20 interface is 6 decimals, the native
+view is 18. Transfers and `recordRun`'s `total` are 6-decimal. Mixing them is a
+factor of 10^12, so balances are compared in one space and never via
+`balanceOf`, which truncates.
+
+## The block ceiling
+
+One run must fit in a 30M gas block, which is roughly 642 payees bare and 539
+with notes. The app caps a run at 500 so the limit never depends on the mode,
+and enforces it before submission rather than at send time.
+
+## Verified on-chain
+
+A 50-payee run on Arc testnet: 51 subcalls, 13,284 bytes of calldata, 2,382,688
+gas, $0.0477. 49 paid and proven, 1 skipped (a zero address, where
+`allowFailure` did its job), 0 problems.

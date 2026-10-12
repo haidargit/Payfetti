@@ -1,0 +1,86 @@
+export const meta = {
+  title: "Rehearse on testnet",
+  group: "Start here",
+  order: 2,
+  summary: "Do the whole thing once with play money, before a cent of yours moves.",
+};
+
+# Rehearse on testnet
+
+Nothing in a payout run can be undone. A transfer that lands is final, a note
+written on-chain is public forever, and a payee who was skipped stays skipped
+until you send again. So do the whole thing once where none of that costs you
+anything.
+
+Everything on testnet behaves exactly as it does with real money. Same
+contracts, same validation, same receipts, same proofs. The only difference is
+that the USDC is worthless.
+
+> Payfetti is live on Arc testnet today. The mainnet deployment is still
+> pending, so for now testnet is the only place to run this at all.
+
+## 1. Check which network you are on
+
+The pill beside the wordmark at the top of the page says **Arc testnet** or
+**Arc mainnet**. It is the first thing to look at every time, and the app
+refuses to guess on your behalf.
+
+## 2. Get play USDC
+
+Request testnet tokens from [faucet.circle.com](https://faucet.circle.com) for
+the address you are going to pay from. Arc uses USDC as its gas token, so the
+same balance covers both the payouts and the fees. There is nothing else to
+fund.
+
+## 3. Pay yourself first
+
+Make your first run two or three rows, with addresses you control, for
+amounts like `1.50`. Confirm the money arrives where you expect before you
+involve anyone else's address.
+
+## 4. Break it on purpose
+
+This is the step most people skip, and it is the one worth doing. Add a row
+with the zero address to a rehearsal run:
+
+```
+0x0000000000000000000000000000000000000000, 1.00, deliberate failure
+```
+
+Validation catches that one before you sign. To see what a genuine mid-run
+failure looks like, you want a row the chain rejects rather than the form:
+Arc enforces USDC blocklists at the protocol level, so a screened address
+reverts while every other payee still gets paid.
+
+Either way, the thing to learn here is what the aftermath looks like: a
+skipped row in the results table, the option to record the skips on-chain, and
+the option to retry only the failures.
+
+## 5. Open a receipt as a payee would
+
+Take one receipt link from the results and open it in a private window, with no
+wallet connected. That is exactly what your payees will see, and it is worth
+knowing before you send two hundred of them.
+
+## 6. Export the run file
+
+Download it, open it, and confirm it contains what you expect. The Merkle
+proofs exist only in those links, so on a real run this file is the only
+durable copy.
+
+## Before you use real money
+
+Once the mainnet deployment lands, run through this before the first live
+batch:
+
+- [ ] A rehearsal run has been paid, start to finish, on testnet
+- [ ] You have opened one of its receipts as an outsider, in a private window
+- [ ] You have exported a run file and know where it is kept
+- [ ] You know whether you want on-chain notes on, and have read what that
+      publishes: see [On-chain notes](#/docs/notes)
+- [ ] Your payee list came from somewhere you trust, and the addresses were
+      not retyped by hand
+- [ ] The network pill says the network you meant
+
+Then start small. A real run of five people costs about half a cent in fees,
+which is a cheap way to be sure.
