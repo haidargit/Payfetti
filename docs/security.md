@@ -123,6 +123,17 @@ Arc testnet, Oct 8 2026. A 50-payee run plus follow-up probes:
 | **Idempotency guard** | resubmitting the same `runId` reverts with `RunAlreadyRecorded(payer, runId)`, selector `0xe6779d42`. Because it reverts at the `aggregate3` level, **the 49 transfers do not re-execute**: a resubmitted batch cannot double-pay |
 | Dual-emitter hazard | 49 transfers produced 49 ERC-20 logs **and** 49 system logs. A verifier must filter to one emitter; we use the ERC-20 one |
 
+Arc testnet, Oct 11–12 2026. A 9-payee run with on-chain notes, one row deliberately bad:
+
+| Property | Evidence |
+|---|---|
+| `Memo` nests inside `Multicall3From` | tx [`0x152d39be…`](https://explorer.testnet.arc.io/tx/0x152d39bebed27babe795bdf1132a90292029e0c3e3e78e0d10ec7e469c214bfe), 579,845 gas. Undocumented by Circle, so measured: `docs/memo.md` |
+| `allowFailure` isolates **through the `Memo` wrapper** | 8 `Transfer` logs and 8 `Memo` events, perfectly aligned. The bad row reverted inside `Memo` and left **no orphaned note** claiming a payment that never happened |
+| A note cannot be moved between payees | all 8 `callDataHash` values matched `keccak256(transfer(payee, amount))` for their own row, 8/8 |
+| `memoIndex` is **chain-wide**, not per-run | this run drew 787,307–787,314. Do not read it as a sequence number |
+| **`markSkipped` works on a real chain** | tx [`0xe7fe1bc9…`](https://explorer.testnet.arc.io/tx/0xe7fe1bc99bbf9e8bfdea514afd6d66591c213dd97acbf7d520f8eb68756b8a83), 50,091 gas, $0.001002. `wasSkipped` flipped to `true` for the failed row and stayed `false` for a payee who was paid, so the flag is precise rather than run-wide. `PayeesSkipped` indexed payer and runId correctly |
+| Source verified on the explorer | the readable Solidity at the contract address recompiles to the exact 2,555 bytes deployed |
+
 ## 6. Residual risks
 
 | Risk | Severity | Status |
