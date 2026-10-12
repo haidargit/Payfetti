@@ -1,0 +1,200 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/*
+ * Overscroll.
+ *
+ * A rubber-band at either end of the page pulls the content away and exposes
+ * the canvas, which is painted from <html>. This page starts light and ends on
+ * the dark footer, so one flat colour is wrong at one end or the other and
+ * shows as a white skirt under the footer.
+ *
+ * Two layers deal with it. `overscroll-behavior-y: none` removes the bounce
+ * wherever the browser supports it, which also stops pull-to-refresh from
+ * reloading a half-filled payee list. Where it does not, the canvas is painted
+ * light over dark and pinned to the viewport, so whichever end is exposed
+ * already matches the edge beside it.
+ */
+html {
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+  background-color: var(--bg);
+  background-image: linear-gradient(to bottom, var(--bg) 0 50%, var(--d-bg) 50% 100%);
+  background-attachment: fixed;
+}
+
+body {
+  margin: 0;
+  overscroll-behavior-y: none;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Two very soft blooms, fixed so scrolling never drags a seam across them.
+   They keep a pale ground from reading as flat grey without becoming a
+   gradient anyone notices. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(820px 460px at 8% -10%, rgba(91, 79, 255, 0.07), transparent 70%),
+    radial-gradient(700px 420px at 95% 0%, rgba(212, 218, 255, 0.5), transparent 72%);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--disp);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(32px, 4.2vw, 52px);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+h3 {
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--acc);
+  text-decoration-color: var(--acc-line);
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--acc-2);
+  text-decoration-color: currentColor;
+}
+
+code,
+.mono {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  font-variant-ligatures: none;
+}
+
+/* Every figure in this app is money, gas or a count, so columns must align. */
+.num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+::selection {
+  background: var(--acc-soft);
+  color: var(--acc-3);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+
+.wrap-narrow {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 22px;
+}
+
+.muted {
+  color: var(--ink-2);
+}
+
+.faint {
+  color: var(--ink-3);
+}
+
+.small {
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.tiny {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* A label, not a ledger heading: sentence case and soft, because tracked-out
+   uppercase is most of what makes a dense screen feel stiff. */
+.caps {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: 0;
+}
+
+.stack {
+  display: grid;
+  gap: 10px;
+}
+
+.stack-lg {
+  display: grid;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.row-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.spread {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
