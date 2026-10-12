@@ -64,9 +64,11 @@ export const PAYFETTI_ADDRESS = (import.meta.env.VITE_PAYFETTI_ADDRESS ??
  * `rpc.*.arc.network`, which 403s with no CORS headers.
  * See ../../docs/arc-notes.md.
  */
+export const ARC_RPC = "https://rpc.mainnet.arc.io";
+export const ARC_TESTNET_RPC = "https://rpc.testnet.arc.io";
+
 export const RPC_URL =
-  import.meta.env.VITE_RPC_URL ??
-  (isMainnet ? "https://rpc.mainnet.arc.io" : "https://rpc.testnet.arc.io");
+  import.meta.env.VITE_RPC_URL ?? (isMainnet ? ARC_RPC : ARC_TESTNET_RPC);
 
 export const EXPLORER = isMainnet ? "https://explorer.arc.io" : "https://explorer.testnet.arc.io";
 
@@ -125,6 +127,17 @@ export const payfettiAbi = [
     inputs: [
       { name: "payer", type: "address" },
       { name: "runId", type: "bytes32" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "wasSkipped",
+    stateMutability: "view",
+    inputs: [
+      { name: "payer", type: "address" },
+      { name: "runId", type: "bytes32" },
+      { name: "payee", type: "address" },
     ],
     outputs: [{ type: "bool" }],
   },

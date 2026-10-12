@@ -9,3 +9,12 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare module "*.mdx" {
+  import type { ComponentType } from "react";
+  import type { DocMeta } from "./content/docs";
+
+  export const meta: DocMeta;
+  const MDXComponent: ComponentType<{ components?: Record<string, unknown> }>;
+  export default MDXComponent;
+}
