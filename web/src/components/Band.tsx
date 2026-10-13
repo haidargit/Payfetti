@@ -20,8 +20,3 @@ export function Band({
     </section>
   );
 }
-
-/** Confetti texture, used where a section break would otherwise be a rule. */
-export function TileBand({ short }: { short?: boolean }) {
-  return <div className={`tile-band${short ? " is-short" : ""}`} aria-hidden="true" />;
-}

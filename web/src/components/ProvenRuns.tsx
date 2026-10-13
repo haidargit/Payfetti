@@ -10,7 +10,7 @@ import { NavLink } from "./NavLink";
  * This is the one claim on the page that is not a model, which is exactly why
  * every entry carries its **own** network. Building these links from the
  * current network instead would render mainnet explorer URLs for testnet
- * hashes the moment the app is pointed at mainnet — dead links, on the section
+ * hashes the moment the app is pointed at mainnet, so dead links on the section
  * that exists to be checkable.
  *
  * The same rule governs the sample receipt: a proof only verifies against the
@@ -25,7 +25,7 @@ const RUNS: { what: string; net: Net; tx: string; result: string; gas: string; c
     what: "50 people, each with a note",
     net: "mainnet",
     tx: "0x3ba827ef46bfe64725af0bb1ed956f67989861b654d1cb507ce738d3bbde985f",
-    result: "50 paid, 1 bad address skipped · real USDC",
+    result: "50 paid, 1 address not accepted",
     gas: "2,900,002 gas",
     cost: "$0.0580",
   },
@@ -33,7 +33,7 @@ const RUNS: { what: string; net: Net; tx: string; result: string; gas: string; c
     what: "50 people, one payment",
     net: "testnet",
     tx: "0x9ef59d48708e03aff07a5491ccc4f3996c752f1202abd37eba359850e7f28a79",
-    result: "49 paid, 1 bad address skipped",
+    result: "49 paid, 1 address not accepted",
     gas: "2,382,688 gas",
     cost: "$0.0477",
   },
@@ -41,7 +41,7 @@ const RUNS: { what: string; net: Net; tx: string; result: string; gas: string; c
     what: "9 people, each with a note",
     net: "testnet",
     tx: "0x152d39bebed27babe795bdf1132a90292029e0c3e3e78e0d10ec7e469c214bfe",
-    result: "8 paid, 1 bad address skipped",
+    result: "8 paid, 1 address not accepted",
     gas: "579,845 gas",
     cost: "$0.0116",
   },
@@ -65,14 +65,22 @@ const SAMPLE_RECEIPT =
   ",0xca73cd1cfe9829eeacd9740dd86a473b450442d8c8358544af1138e79ba4ef83";
 
 export function ProvenRuns() {
+  /*
+   * Pointed at mainnet, the section shows mainnet runs only. A practice run
+   * listed beside a real one invites the reader to count it as evidence, and
+   * the whole point of this section is that every line on it moved real money.
+   * Pointed at testnet, both are shown: that is the network you are testing on.
+   */
+  const runs = isMainnet ? RUNS.filter((r) => r.net === "mainnet") : RUNS;
+
   return (
     <div className="proven">
       <p className="caps" style={{ marginBottom: 12 }}>
-        We have already done this. Here are the receipts.
+        We have already done this.
       </p>
 
       <div className="proven-rows">
-        {RUNS.map((r) => (
+        {runs.map((r) => (
           <a
             className="proven-row"
             key={r.tx}
@@ -95,8 +103,8 @@ export function ProvenRuns() {
       </div>
 
       <p className="small" style={{ marginTop: 14 }}>
-        The skipped one in each run was a bad address we added on purpose, to show that one bad
-        entry cannot take everyone else down with it.{" "}
+        Every run above carries one address we knew would be refused, put there on purpose to show
+        that a single bad entry cannot take the rest of the list down with it.{" "}
         {(SAMPLE_NET === "mainnet") === isMainnet ? (
           <>
             <NavLink href={SAMPLE_RECEIPT}>Open one of these receipts</NavLink> and watch it check

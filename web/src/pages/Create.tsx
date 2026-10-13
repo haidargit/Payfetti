@@ -314,11 +314,11 @@ export function Create() {
 
   return (
     <>
-      <div className="hero is-tight">
+      <div className="pf-intro is-tight">
         <Steps at={phase === "sending" ? 1 : 0} />
         <h1 style={{ fontSize: "clamp(27px, 3.2vw, 36px)", marginTop: 18 }}>New payout run</h1>
         <p className="small muted" style={{ marginTop: 8, maxWidth: "56ch" }}>
-          We check every line first. Once it has gone out, it cannot be called back.
+          Every line is checked first. Once it has gone out, it cannot be called back.
         </p>
       </div>
 
@@ -476,8 +476,9 @@ export function Create() {
           <p className="tiny faint" style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
             <Icon name="info" size={13} />
             <span>
-              Before anything leaves your wallet we check every address, flag anyone listed twice,
-              catch amounts that cannot be sent exactly, and make sure your balance covers the lot.
+              Before anything leaves your wallet, every address is checked, anyone listed twice is
+              flagged, amounts that cannot be sent exactly are caught, and your balance is weighed
+              against the total.
             </span>
           </p>
         </div>

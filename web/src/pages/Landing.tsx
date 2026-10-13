@@ -19,8 +19,8 @@ const STEPS = [
     title: "Bring your list",
     body: (
       <>
-        Who gets paid, and how much, straight out of your spreadsheet. We check every line before
-        anything leaves your wallet.
+        Who gets paid, and how much, straight out of your spreadsheet. Every line is checked
+        before anything leaves your wallet.
       </>
     ),
   },
@@ -36,11 +36,11 @@ const STEPS = [
   },
   {
     n: "3",
-    title: "Everyone gets proof",
+    title: "Hand out the proof",
     body: (
       <>
-        Each person receives a link that proves they were paid. Nothing for them to sign up for,
-        and nothing they have to take on trust.
+        Every payment comes with a link that proves itself against the network. Send one to each
+        person, and there is nothing for them to join and nothing to take on faith.
       </>
     ),
   },
@@ -54,13 +54,13 @@ export function Landing() {
           Powered by{" "}
           <a href="https://www.arc.io" target="_blank" rel="noreferrer">
             Arc
-          </a>
-          , Circle&rsquo;s stablecoin network
+          </a>{", "}
+          Circle&rsquo;s stablecoin network
         </p>
         <h1>Pay everyone at once.</h1>
-        <p className="hero-lede">
-          Bring a list of who gets paid and how much. Everyone is paid in one go, and each person
-          gets proof they can check for themselves. It costs about a tenth of a cent per person.
+        <p className="pf-lede">
+          Bring a list of who gets paid and how much. Everyone is paid in one go, and each of them
+          receives proof of their own payment. About a tenth of a cent per person.
         </p>
 
         <div className="landing-cta">
@@ -71,7 +71,7 @@ export function Landing() {
           <NavLink className="btn" href="#/receipt">
             Check a receipt
           </NavLink>
-          <NavLink className="btn btn-quiet" href="#/docs">
+          <NavLink className="btn btn-quiet" href="#/docs/how-a-run-works">
             How it works
           </NavLink>
         </div>
@@ -87,24 +87,11 @@ export function Landing() {
           </li>
           <li>
             <Icon name="check" size={13} />
-            Nothing to take our word for
+            Every payment is publicly checkable
           </li>
         </ul>
 
         <Calculator />
-
-        <a
-          className="by-line"
-          href="https://github.com/haidargit"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <span className="mark" style={{ width: 26, height: 26, borderRadius: 9 }}>
-            <Icon name="github" size={15} />
-          </span>
-          Built by haidar ali
-          <Icon name="external" size={12} />
-        </a>
 
         <div className="landing-steps">
           {STEPS.map((s) => (

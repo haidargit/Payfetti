@@ -57,7 +57,7 @@ export function Docs({ slug }: { slug?: string }) {
       <Band>
         <div style={{ padding: "80px 0 120px" }}>
           <h1>No such page</h1>
-          <p className="hero-lede">
+          <p className="pf-lede">
             That documentation page does not exist. <a href="#/docs">Start from the beginning</a>.
           </p>
         </div>

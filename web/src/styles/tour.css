@@ -6,8 +6,16 @@
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-3);
   padding: 22px 22px 18px;
-  max-width: 352px;
+  /* driver.js positions this absolutely, so the cap has to account for the
+     margin it leaves on both sides itself. */
+  max-width: min(352px, calc(100vw - 32px));
   font-family: var(--sans);
+}
+
+@media (max-width: 420px) {
+  .driver-popover.pf-tour {
+    padding: 18px 18px 15px;
+  }
 }
 
 .driver-popover.pf-tour .driver-popover-title {

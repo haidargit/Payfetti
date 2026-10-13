@@ -59,40 +59,19 @@
   color: var(--d-acc);
 }
 
-/*
- * A texture band, standing in for a rule between sections. The mask is our own
- * confetti tile: paint comes from the background, so the same element works on
- * either ground by changing one colour.
- */
-.tile-band {
-  height: 92px;
-  background: currentColor;
-  opacity: 0.09;
-  -webkit-mask-image: var(--tile);
-  mask-image: var(--tile);
-  -webkit-mask-repeat: repeat;
-  mask-repeat: repeat;
-  -webkit-mask-size: 26px 26px;
-  mask-size: 26px 26px;
-}
-
-.band.is-dark .tile-band,
-.foot .tile-band {
-  opacity: 0.14;
-}
-
-.tile-band.is-short {
-  height: 56px;
-}
-
 /* ─── top bar ───────────────────────────────────────────────────────── */
 
+/*
+ * Opaque, deliberately. A frosted header works on a page that is light all the
+ * way down; this one has dark bands, and a translucent bar let each band's top
+ * edge through as a horizontal seam across the header, with the wordmark and
+ * the links losing contrast against the darkened half as it passed under.
+ */
 .topbar {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(248, 249, 252, 0.82);
-  backdrop-filter: saturate(1.5) blur(12px);
+  background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
 
@@ -114,6 +93,56 @@
   justify-content: space-between;
   gap: 14px;
   height: 68px;
+}
+
+/*
+ * Two whole labels rather than one label with a removable word: the header's
+ * pills are flex containers, so a split label would put a flex gap in the
+ * middle of the phrase.
+ */
+.top-narrow {
+  display: none;
+}
+
+.top-balance {
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+/*
+ * Below a phone's width the header can hold a wordmark, one link and the
+ * wallet, and nothing else. What goes is what the page repeats anyway: the
+ * balance is on the composer, the tour is in the footer, and "Pay a list" is
+ * the first button in the page body.
+ */
+@media (max-width: 680px) {
+  .band-in {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .topbar-in {
+    height: 60px;
+    gap: 10px;
+  }
+  /* Qualified, because `.btn` sets its own display further down the file. */
+  .topbar .top-balance,
+  .topbar .top-wide {
+    display: none;
+  }
+  .topbar .top-narrow {
+    display: inline;
+  }
+  .brand-name {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 340px) {
+  .topbar .brand-name {
+    display: none;
+  }
 }
 
 .brand {
@@ -274,14 +303,17 @@
 
 /* ─── page frame ─────────────────────────────────────────────────────── */
 
-.hero {
+.pf-intro {
   padding: 46px 0 30px;
 }
 
+/*
+ * A sentence, not a row of chips. It was a flex container once, which
+ * blockified the inline link inside it and put a gap on either side of "Arc",
+ * a space before the comma that no amount of editing the JSX could remove.
+ */
 .kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  display: inline-block;
   font-size: 12.5px;
   font-weight: 500;
   color: var(--acc-3);
@@ -291,7 +323,7 @@
   margin: 20px 0 16px;
 }
 
-.hero-lede {
+.pf-lede {
   max-width: 58ch;
   margin-top: 16px;
   font-size: 17px;
@@ -373,7 +405,7 @@
   margin-top: 6px;
 }
 
-.hero.is-tight {
+.pf-intro.is-tight {
   padding: 30px 0 22px;
 }
 
@@ -389,6 +421,7 @@
   position: sticky;
   top: 86px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -498,6 +531,8 @@
   font-size: 14.5px;
   font-weight: 500;
   line-height: 1;
+  /* A label that wraps turns a pill into a blob on a narrow screen. */
+  white-space: nowrap;
   padding: 12px 18px;
   border-radius: var(--r-pill);
   border: 0;
@@ -1290,6 +1325,14 @@ table.ledger tr.is-bad:hover td {
   }
 }
 
+/* Matching `.band-in`, so the footer's text lines up with the page's above it. */
+@media (max-width: 680px) {
+  .foot-in {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
 .foot-top {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
@@ -1352,9 +1395,17 @@ table.ledger tr.is-bad:hover td {
 
 /* The wordmark sits half below the waterline: the footer clips it, so the page
    ends on the name rather than on a row of links. */
+/*
+ * The size lives on the container and the height is written in `em`, so the
+ * waterline sits at the same point on the letters at every width. Two separate
+ * clamps drifted apart on a phone: the floor held the type at 120px, which is
+ * 393px of "payfetti" in a 339px footer, and the last letter was sliced off by
+ * the overflow that is only meant to cut the glyphs horizontally.
+ */
 .foot-mark {
   position: relative;
-  height: clamp(86px, 12.1vw, 165px);
+  font-size: clamp(84px, 21.5vw, 310px);
+  height: 0.563em;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
@@ -1365,7 +1416,7 @@ table.ledger tr.is-bad:hover td {
   left: 50%;
   top: 0;
   transform: translateX(-50%);
-  font-size: clamp(120px, 21.5vw, 310px);
+  font-size: inherit;
   font-weight: 600;
   letter-spacing: -0.055em;
   line-height: 0.82;
@@ -1672,23 +1723,23 @@ table.ledger tr.is-bad:hover td {
   gap: 11px;
   padding: 14px 16px;
   border-radius: var(--r);
-  background: linear-gradient(135deg, #fff6e0, #fffaf0);
-  border: 1px solid #f1dcae;
-  color: #6b4a08;
-  box-shadow: 0 6px 18px -12px rgba(146, 102, 10, 0.5);
+  background: linear-gradient(135deg, #eeecff, #f6f5ff 60%, #eef7f3);
+  border: 1px solid var(--acc-line);
+  color: var(--acc-3);
+  box-shadow: 0 6px 18px -12px rgba(91, 79, 255, 0.45);
 }
 
 .calc-win > svg {
   flex: none;
   margin-top: 1px;
-  color: #c08a14;
+  color: var(--acc);
 }
 
 .calc-win strong {
   display: block;
   font-size: 14px;
   line-height: 1.4;
-  color: #5c3f06;
+  color: var(--acc-3);
 }
 
 .calc-win span {
@@ -1830,3 +1881,104 @@ table.ledger tr.is-bad:hover td {
   margin-top: -4px;
   line-height: 1.5;
 }
+
+/*
+ * A footnote that reads as a sentence rather than a symbol to hover. The icon
+ * is nudged down to sit on the first line's baseline, not its box top.
+ */
+.calc-note {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  line-height: 1.55;
+}
+
+.calc-note svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+/* ─── brand mark ─────────────────────────────────────────────────────── */
+
+/*
+ * The logo's navy sits a few shades off the dark footer's background, so it
+ * carries its own light tile rather than relying on whatever is behind it.
+ * `.mark` is left alone: it is the indigo chip the GitHub by-line uses.
+ */
+.logo-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(4, 2, 23, 0.1);
+  overflow: hidden;
+}
+
+.logo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ─── buttons that are links ─────────────────────────────────────────── */
+
+/*
+ * A `.btn` is often an anchor, and the base anchor styles were winning:
+ * `a:hover` (0,1,1) outranks `.btn-primary` (0,1,0), so hovering turned a
+ * white label indigo on an indigo button and the text disappeared. The
+ * underline came from the same place. Every variant pins its own colour at a
+ * specificity the anchor rules cannot reach.
+ */
+.btn,
+a.btn,
+a.btn:hover {
+  text-decoration: none;
+}
+
+.btn:hover,
+.btn:active {
+  color: var(--ink);
+}
+
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:active {
+  color: #fff;
+}
+
+.btn-quiet,
+.btn-quiet:hover {
+  color: var(--ink-2);
+}
+
+.btn-quiet:hover {
+  color: var(--ink);
+}
+
+.btn-soft,
+.btn-soft:hover {
+  color: var(--acc-3);
+}
+
+.btn-warn,
+.btn-warn:hover {
+  color: var(--warn);
+}
+
+.btn:disabled,
+.btn:disabled:hover {
+  color: var(--ink-4);
+}
+
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+  color: var(--ink-4);
+}
+
+.testmode .btn,
+.testmode .btn:hover {
+  color: var(--warn);
+}
+
