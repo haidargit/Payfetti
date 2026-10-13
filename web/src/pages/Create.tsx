@@ -16,7 +16,7 @@ import {
 } from "../lib/chain";
 import { EXAMPLE, formatUsdc, parseRows } from "../lib/parse";
 import { buildRun, newRunId, type BuiltRun } from "../lib/batch";
-import { count, usd, usdc } from "../lib/format";
+import { usd, usdc } from "../lib/format";
 import { Callout } from "../components/Callout";
 import { Field, Switch } from "../components/Field";
 import { Icon } from "../components/Icon";
@@ -60,6 +60,38 @@ function useIsContractAccount(address: Hex | undefined) {
   return isContract;
 }
 
+/**
+ * Whether the run registry actually exists on the chain we are pointed at.
+ *
+ * This is not paranoia. `aggregate3` dispatches with a low-level call, and a
+ * call to an address holding no code returns success, so `allowFailure: false`
+ * on `recordRun` does NOT catch a missing registry. The transfers would all
+ * execute with real money, the run would never be recorded, every receipt would
+ * fail to verify, and the double-pay guard would be gone. One wrong
+ * `VITE_CHAIN_ID` is all it takes, so check rather than trust.
+ */
+function useRegistryDeployed() {
+  const publicClient = usePublicClient();
+  const [state, setState] = useState<"checking" | "yes" | "no">("checking");
+
+  useEffect(() => {
+    let live = true;
+    if (!publicClient) return;
+    publicClient
+      .getCode({ address: PAYFETTI_ADDRESS })
+      .then((code) => {
+        if (live) setState(code && code !== "0x" ? "yes" : "no");
+      })
+      // A transport failure is not proof of absence, so do not block on it.
+      .catch(() => live && setState("yes"));
+    return () => {
+      live = false;
+    };
+  }, [publicClient]);
+
+  return state;
+}
+
 export function Create() {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
@@ -84,6 +116,7 @@ export function Create() {
   const rowsRef = useRef<HTMLTextAreaElement>(null);
 
   const isContractAccount = useIsContractAccount(address);
+  const registry = useRegistryDeployed();
 
   const parsed = useMemo(() => parseRows(text), [text]);
 
@@ -104,6 +137,7 @@ export function Create() {
   const tooBig = gas > BLOCK_GAS_LIMIT || parsed.rows.length > MAX_PAYEES;
   const canSend =
     isConnected &&
+    registry === "yes" &&
     !isContractAccount &&
     parsed.rows.length > 0 &&
     parsed.errors.length === 0 &&
@@ -260,7 +294,7 @@ export function Create() {
         <Steps at={phase === "sending" ? 1 : 0} />
         <h1 style={{ fontSize: "clamp(27px, 3.2vw, 36px)", marginTop: 18 }}>New payout run</h1>
         <p className="small muted" style={{ marginTop: 8, maxWidth: "56ch" }}>
-          Everything is checked before you sign, because a transfer cannot be undone.
+          We check every line first. Once it has gone out, it cannot be called back.
         </p>
       </div>
 
@@ -272,7 +306,7 @@ export function Create() {
                 id="label"
                 label="Run label"
                 tour="label"
-                hint="Stored on-chain with the run and shown on every receipt. Name it so you recognise it in a year."
+                hint="Appears on every receipt you hand out. Name it so you still recognise it in a year."
               >
                 <input
                   id="label"
@@ -315,8 +349,8 @@ export function Create() {
               >
                 {onChainNotes ? (
                   <>
-                    Each note is stored permanently on Arc and anyone can read it, so a payee can
-                    look their own payment up without a link from you. Adds{" "}
+                    Each note is published permanently and anyone can read it, so a payee can find
+                    their own payment without a link from you. Adds{" "}
                     <strong>{usd(notesFee)}</strong> to this run
                     {parsed.rows.length > 0 && <> across {parsed.rows.length} payees</>}. Turn it off
                     for anything identifying.
@@ -362,17 +396,24 @@ export function Create() {
 
           {tooBig && (
             <Callout tone="err" title="Too large for one transaction">
-              This run needs {count(gas)} gas, past Arc's {count(BLOCK_GAS_LIMIT)} block limit. Split
-              it into runs of {MAX_PAYEES} or fewer.
+              A single payment can only carry so many people. Split this into batches of{" "}
+              {MAX_PAYEES} or fewer and send them one after another.
+            </Callout>
+          )}
+
+          {registry === "no" && (
+            <Callout tone="err" title="Payfetti is not available on this network">
+              There is no payout registry at <code>{PAYFETTI_ADDRESS}</code> on {chain.name}, so
+              sending here would move the money without recording the run, leaving every payee with
+              a receipt that cannot be checked. Sending is blocked until that is fixed.
             </Callout>
           )}
 
           {isContractAccount && (
             <Callout tone="err" title="This wallet is a smart contract account">
-              Arc's <code>CallFrom</code> precompile accepts only externally owned accounts, so a
-              Safe, an ERC-4337 account or any other smart account cannot pay through Payfetti.
-              That is a protocol constraint rather than something we can work around. Connect an
-              EOA instead, and see <a href="#/docs/limits">Honest limits</a>.
+              Shared and smart-contract wallets, like a Safe, cannot send payments here. That is a
+              limit of the network itself, not something we can work around. Connect a standard
+              personal wallet instead. <a href="#/docs/limits">More on what this cannot do</a>.
             </Callout>
           )}
 
@@ -411,9 +452,8 @@ export function Create() {
           <p className="tiny faint" style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
             <Icon name="info" size={13} />
             <span>
-              Validation runs before anything is signed: checksummed addresses, no zero address, no
-              amount with more than six decimals, duplicates flagged, total checked against your
-              balance. Transfers are irreversible, so these are the last line of defence.
+              Before anything leaves your wallet we check every address, flag anyone listed twice,
+              catch amounts that cannot be sent exactly, and make sure your balance covers the lot.
             </span>
           </p>
         </div>

@@ -1413,3 +1413,420 @@ table.ledger tr.is-bad:hover td {
     animation-duration: 2.4s;
   }
 }
+
+/* ─── calculator ─────────────────────────────────────────────────────── */
+
+.calc {
+  margin-top: 40px;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.calc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 22px 16px;
+}
+
+.calc-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.calc-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.calc-preset {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.14s ease;
+}
+
+.calc-preset:hover {
+  background: var(--surface-3);
+}
+
+.calc-preset.is-on {
+  background: var(--acc-weak);
+  color: var(--acc-3);
+  font-weight: 500;
+}
+
+.calc-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.calc-controls {
+  padding: 20px 22px 22px;
+  display: grid;
+  gap: 20px;
+  align-content: start;
+}
+
+.calc-field {
+  display: grid;
+  gap: 9px;
+}
+
+.calc-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.calc-label strong {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.calc-field input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  cursor: pointer;
+}
+
+.calc-field input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-pill);
+  background: var(--acc);
+  border: 3px solid var(--surface);
+  box-shadow: var(--shadow-acc);
+  cursor: grab;
+}
+
+.calc-field input[type="range"]::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: var(--r-pill);
+  background: var(--acc);
+  border: 3px solid var(--surface);
+  cursor: grab;
+}
+
+.calc-field input[type="range"]:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 3px;
+}
+
+.calc-out {
+  padding: 20px 22px 22px;
+  background: var(--surface-2);
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.calc-headline {
+  display: grid;
+  gap: 2px;
+}
+
+.calc-big {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.calc-rows {
+  display: grid;
+  gap: 2px;
+}
+
+.calc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 11px;
+  border-radius: var(--r-sm);
+  font-size: 13.5px;
+}
+
+.calc-row.is-ours {
+  background: var(--acc-weak);
+  color: var(--acc-3);
+}
+
+.calc-row .num {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.calc-verdict {
+  color: var(--ink-2);
+}
+
+@media (max-width: 720px) {
+  .calc-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .calc-out {
+    border-top: 1px solid var(--line);
+  }
+}
+
+/* ─── proven runs ────────────────────────────────────────────────────── */
+
+.proven {
+  margin-top: 40px;
+}
+
+.proven-rows {
+  display: grid;
+  gap: 8px;
+}
+
+.proven-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    background 0.14s ease,
+    transform 0.14s ease;
+}
+
+.proven-row:hover {
+  background: var(--surface-2);
+  transform: translateX(2px);
+}
+
+.proven-row > svg:last-child {
+  color: var(--ink-3);
+  flex: none;
+}
+
+.proven-what {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.proven-figs {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.proven-cost {
+  font-weight: 600;
+  font-size: 14.5px;
+}
+
+.proven-tx {
+  color: var(--ink-3);
+}
+
+@media (max-width: 620px) {
+  .proven-tx {
+    display: none;
+  }
+}
+
+/* ─── the saving, said once and loudly ───────────────────────────────── */
+
+/*
+ * The one element on the page allowed to look like a prize. It carries the
+ * comparison a reader came to check, so it gets warm colour the rest of the
+ * system never uses, and it is the only place that colour appears.
+ */
+.calc-win {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, #fff6e0, #fffaf0);
+  border: 1px solid #f1dcae;
+  color: #6b4a08;
+  box-shadow: 0 6px 18px -12px rgba(146, 102, 10, 0.5);
+}
+
+.calc-win > svg {
+  flex: none;
+  margin-top: 1px;
+  color: #c08a14;
+}
+
+.calc-win strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #5c3f06;
+}
+
+.calc-win span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* ─── the three reassurances ─────────────────────────────────────────── */
+
+.landing-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.landing-trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px 7px 11px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.landing-trust li svg {
+  color: var(--ok);
+}
+
+/* ─── author link ────────────────────────────────────────────────────── */
+
+.by-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 26px;
+  padding: 7px 14px 7px 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 13px;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.by-line:hover {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+
+.by-line img {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-pill);
+  display: block;
+}
+
+/* ─── test mode ──────────────────────────────────────────────────────── */
+
+/*
+ * Only ever rendered on a test network, so it is allowed to be the loudest
+ * thing on the page. The hazard stripe is doing real work: it is the one
+ * pattern nothing else in the system uses, so it cannot be mistaken for an
+ * ordinary notice.
+ */
+.testmode {
+  display: flex;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 18px 20px 18px 22px;
+  border-radius: var(--r-lg);
+  background: #fffdf4;
+  border: 1px solid var(--warn-line);
+  color: var(--warn);
+  position: relative;
+  overflow: hidden;
+}
+
+.testmode::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--warn-line) 0 6px,
+    #f6e4b4 6px 12px
+  );
+}
+
+.testmode-glyph {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.testmode-body {
+  min-width: 0;
+}
+
+.testmode-title {
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-bottom: 4px;
+}
+
+.testmode .btn {
+  background: var(--surface);
+  color: var(--warn);
+}
+
+.testmode .btn:hover {
+  background: var(--warn-bg);
+}
+
+.testmode .btn-quiet {
+  background: none;
+}
+
+.calc-source {
+  margin-top: -4px;
+  line-height: 1.5;
+}

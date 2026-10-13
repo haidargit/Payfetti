@@ -72,6 +72,13 @@ export function useTour({ enabled }: { enabled: boolean }) {
     return () => window.clearTimeout(t);
   }, [enabled, start]);
 
+  // Leaving the composer has to close it too. The steps point at fields that no
+  // longer exist, so an overlay left running would highlight nothing on a page
+  // it was never about.
+  useEffect(() => {
+    if (!enabled) ref.current?.destroy();
+  }, [enabled]);
+
   useEffect(() => () => ref.current?.destroy(), []);
 
   return start;

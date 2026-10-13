@@ -111,8 +111,8 @@ export function RunReceipts({
               title={`${skippedRows.length} ${plural(skippedRows.length, "payee")} could not be paid`}
             >
               <p style={{ marginTop: 4 }}>
-                The transfer reverted and <code>allowFailure</code> kept the rest of the run alive. A
-                screened address or a bad row does this, and the money never left your wallet.
+                Their payment bounced back, and the rest of the list went through regardless. A
+                blocked or invalid address does this. That money never left your wallet.
               </p>
               <div className="row-wrap" style={{ marginTop: 10 }}>
                 <button
@@ -139,8 +139,8 @@ export function RunReceipts({
                 </button>
               </div>
               <p className="tiny" style={{ marginTop: 8, opacity: 0.85 }}>
-                Recording them writes the skip to the registry, so a payee checking their receipt is
-                told they were skipped rather than shown a failed proof.
+                Recording it means anyone opening their receipt is told they were skipped, instead
+                of seeing a check that simply fails.
               </p>
             </Callout>
           )}
