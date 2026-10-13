@@ -1,4 +1,4 @@
-import { encodeFunctionData, keccak256, toHex, type Hex } from "viem";
+import { encodeAbiParameters, encodeFunctionData, keccak256, toHex, type Hex } from "viem";
 import { erc20Abi, MEMO, memoAbi, payfettiAbi, PAYFETTI_ADDRESS, USDC } from "./chain";
 import { proofFor, treeFromRows, verifyProof, type Row } from "./merkle";
 import type { ParsedRow } from "./parse";
@@ -42,12 +42,61 @@ export type BuiltRun = {
   receipts: { payee: Hex; amount: bigint; note: string; index: number; proof: Hex[] }[];
 };
 
-/** A runId unique to this payer+moment. Namespaced per payer on-chain anyway. */
-export function newRunId(label?: string): Hex {
-  const seed = label?.trim()
-    ? label.trim()
-    : `payfetti-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  return keccak256(toHex(seed));
+/**
+ * The runId is derived from the run's **content**, never from a clock or a
+ * random seed. This is what makes the on-chain double-pay guard actually work.
+ *
+ * `recordRun` reverts on a `runId` this payer has already used, and
+ * `allowFailure: false` propagates that revert to the whole `aggregate3`, so no
+ * transfer executes. With a random id that guard only ever caught a resubmission
+ * of the *same built batch* — which is the easy case, already prevented by
+ * disabling the button.
+ *
+ * The case it missed is the dangerous one: a payer signs, the transaction
+ * broadcasts, and then the laptop sleeps or the tab is reloaded before the
+ * receipt arrives. The payment lands; the UI does not. Reopening the app and
+ * pasting the same list would mint a *fresh* random id, sail past the guard, and
+ * pay all 200 people a second time, irreversibly.
+ *
+ * Deriving the id from (payer, root, total, count, label) means that second
+ * attempt produces the *same* id and the chain refuses it. The guard we already
+ * verified on-chain starts covering the realistic failure, with no contract
+ * change.
+ *
+ * Paying an identical list again on purpose stays possible: change the label.
+ * "October stipend" and "November stipend" are different runs; the same list
+ * under the same label, twice, is the thing we want to stop.
+ */
+export function deriveRunId(args: {
+  payer: Hex;
+  rows: ParsedRow[];
+  label: string;
+}): Hex {
+  const { payer, rows, label } = args;
+  if (rows.length === 0) throw new Error("no payees");
+
+  const noteHash = keccak256(toHex(label));
+  const tree = treeFromRows(
+    rows.map((r) => ({ payee: r.payee, amount: r.amount, note: r.note })),
+    noteHash,
+  );
+  const total = rows.reduce((acc, r) => acc + r.amount, 0n);
+
+  // Lowercased for the same reason `leafOf` does it: viem rejects a
+  // non-EIP-55 mixed-case address, and the same payer must always derive the
+  // same id regardless of how their wallet cased it.
+  return keccak256(
+    encodeAbiParameters(
+      [
+        { type: "address" },
+        { type: "bytes32" },
+        { type: "uint256" },
+        { type: "uint32" },
+        { type: "string" },
+      ],
+      [payer.toLowerCase() as Hex, tree.root, total, rows.length, label],
+    ),
+  );
 }
 
 /**

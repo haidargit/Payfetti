@@ -81,7 +81,23 @@ export const ARC_TESTNET_RPC = "https://rpc.testnet.arc.io";
 
 export const RPC_URL = env(import.meta.env.VITE_RPC_URL) ?? (isMainnet ? ARC_RPC : ARC_TESTNET_RPC);
 
-export const EXPLORER = isMainnet ? "https://explorer.arc.io" : "https://explorer.testnet.arc.io";
+export const ARC_EXPLORER = "https://explorer.arc.io";
+export const ARC_TESTNET_EXPLORER = "https://explorer.testnet.arc.io";
+
+export const EXPLORER = isMainnet ? ARC_EXPLORER : ARC_TESTNET_EXPLORER;
+
+/**
+ * An explorer link for a transaction on a **named** network, rather than on
+ * whichever network the app happens to be pointed at.
+ *
+ * Anything that cites a specific past transaction has to use this. `txUrl`
+ * follows the current network, so a mainnet build would render a mainnet
+ * explorer link for a testnet hash — a dead link on the page that is meant to
+ * be our strongest evidence.
+ */
+export function txUrlOn(net: "mainnet" | "testnet", hash: string): string {
+  return `${net === "mainnet" ? ARC_EXPLORER : ARC_TESTNET_EXPLORER}/tx/${hash}`;
+}
 
 export const txUrl = (hash: string) => `${EXPLORER}/tx/${hash}`;
 export const addressUrl = (addr: string) => `${EXPLORER}/address/${addr}`;

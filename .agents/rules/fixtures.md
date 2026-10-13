@@ -33,19 +33,28 @@ keccak256(b"<runLabel>" + enc_uint(i))[-20:]   # == rows[i]["payee"]
 
 ## The rule
 
-**Never commit a fixture built from a real run.**
+**Never commit a fixture containing real recipients.**
 
-A fixture from a mainnet payout would publish actual recipients' wallet
-addresses, what each person was paid, and a note saying why — permanently, in a
-public repo, with no way to retract. That is a privacy leak about third parties
-who never agreed to it, and it is far worse than the on-chain exposure those
-people already accepted, because a git repo collates it into one searchable file.
+An earlier version of this rule said "testnet only". That was a proxy for the real
+criterion and it was wrong in both directions: a testnet run paying real people's
+addresses would still be a leak, and `fixtures/batch-51-mainnet-proofs.json` is a
+**mainnet** run that is perfectly safe, because every payee in it is synthetic.
+
+What actually matters is whether a third party appears. A fixture from a genuine
+payout would publish actual recipients' wallet addresses, what each was paid, and
+a note saying why — permanently, publicly, with no way to retract. That is worse
+than the on-chain exposure those people already accepted, because a git repo
+collates it into one searchable file.
 
 Before committing anything under `fixtures/`:
 
-- [ ] `network` is `testnet`
-- [ ] every `payee` re-derives from `keccak256(runLabel ‖ index)`
+- [ ] every `payee` re-derives from `keccak256(runLabel ‖ index)`, or is the
+      deliberate zero address
 - [ ] no `note` contains a real person's name or identifier
+- [ ] the payer is ours, and already public on-chain
+
+The network is irrelevant to those three. Mainnet demo runs are fine; a real
+payroll is not, on either chain.
 
 If a real run needs to be verifiable by someone else, hand them the exported run
 file directly. It is the same data; it just does not belong in git.
