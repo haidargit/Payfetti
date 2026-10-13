@@ -139,6 +139,7 @@ Arc testnet, Oct 11–12 2026. A 9-payee run with on-chain notes, one row delibe
 | Risk | Severity | Status |
 |---|---|---|
 | A payer declares a run and sends no transfers | **Medium** | mitigated by the two-half receipt (§3); requires correct frontend |
+| ~~**Double payment after a lost tab.** A payer signs, the transaction broadcasts, the tab reloads before the receipt arrives. The payment landed but the UI did not know, so pasting the same list again minted a *fresh random* `runId`, sailed past the on-chain guard, and paid everyone a second time~~ | ~~**High**~~ **closed Oct 13 2026** | `runId` is now derived from `(payer, payeeRoot, total, count, label)`, so the second attempt produces the *same* id and `recordRun` reverts the whole `aggregate3`. No contract change was needed: the guard was always correct, it was being fed a key that could never collide. The UI also calls `runExists` **before** signing, so the payer is told "this already went through" instead of watching a revert. 10 tests in `web/tests/batch.test.ts`; paying the same list deliberately still works by changing the label |
 | `total`/`count` misreported | Low | documented as unverified metadata (§4) |
 | ~~`CallFrom` sender preservation~~ | n/a | Confirmed on Arc testnet, Oct 8 2026. `runExists(payer)=true`, `runExists(Multicall3From)=false`. A run is ONE transaction |
 | `markSkipped` flags are write-only (never unset) | Low | by design: retries create a new run, so skip flags are historical |

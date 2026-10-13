@@ -6,9 +6,48 @@ Built on [Arc](https://docs.arc.io), Circle's stablecoin L1, where USDC is the n
 
 Built for [Arc Microgrants](https://dorahacks.io/hackathon/arc-microgrants).
 
-**Live on Arc testnet:** [`0x7dacb26f…04f835`](https://explorer.testnet.arc.io/address/0x7dacb26f14af8e844dabbb2dba1d31427204f835)
-— **source verified on the explorer**, so the readable Solidity there is provably the
-2,555 bytes actually running. Mainnet pending.
+**Live on Arc mainnet:** [`0x7dACb26F…04f835`](https://explorer.arc.io/address/0x7dACb26F14af8E844dABBB2DBA1D31427204f835)
+· deployed in [`0x9b53a395…`](https://explorer.arc.io/tx/0x9b53a395c46b52af39617baccee9ea7291a9a0bfdcd9db4459f63ad109d2a03e),
+605,687 gas, **$0.0121**. Source verified on the explorer.
+
+Also on [Arc testnet](https://explorer.testnet.arc.io/address/0x7dacb26f14af8e844dabbb2dba1d31427204f835)
+at the same address, since a contract's address derives from deployer and nonce and
+both deploys were nonce 0 from the same wallet. The two are byte-identical:
+
+```
+mainnet  eth_getCode sha256  05249831f40a1795f3351119aa2be12c435435a1
+testnet  eth_getCode sha256  05249831f40a1795f3351119aa2be12c435435a1   2,555 bytes each
+```
+
+<details>
+<summary><strong>Why the explorer says "partial match", and why that is deliberate</strong></summary>
+
+`contracts/foundry.toml` sets `bytecode_hash = "none"` and `cbor_metadata = false`,
+which strip the metadata trailer solc normally appends. Blockscout grades a **full
+match** by comparing that trailer's hash against the recompiled source. With no
+trailer, it has nothing to compare, so **partial is the ceiling** for this build.
+The testnet contract was verified by direct upload rather than bytecode matching
+and came out partial too.
+
+What partial does and does not mean here:
+
+- ✅ the deployed bytecode provably matches the source shown on the explorer
+- ❓ the exact compiler input (comments, file paths) cannot be re-derived
+
+The executable code is confirmed; only the paperwork is unconfirmable.
+
+Enabling metadata would add **54 inert bytes** (2,555 → 2,609), cost about
+$0.0002 more to deploy, change nothing about the ABI, storage layout or runtime
+gas, and yield a full match. It was not worth a redeploy to a new address once
+this one was live, but it is a decision that can only be made once, before the
+first deploy, since it is baked into immutable bytecode.
+
+Incidentally, the mainnet verification was imported by Blockscout's bytecode
+database rather than uploaded: it recognised the code from the already-verified
+testnet contract. That only happens on an exact byte match, so the explorer
+independently corroborated the two hashes above.
+
+</details>
 
 ## The problem
 
@@ -115,7 +154,7 @@ Memo.memo(USDC, transfer(payee_i, amount_i), runId, note_i)
 ```
 
 `memoId` is the run's own `runId`, and the `Memo` event indexes it, so once you
-know a run's id its notes come back from a **single-block** `getLogs` — O(1), no
+know a run's id its notes come back from a **single-block** `getLogs`: O(1), no
 indexer and no backend. `Memo` routes through the same `CallFrom` precompile, so
 the payer stays `msg.sender` and the `Transfer` log is identical either way. A
 receipt verifies the same in both modes, and the Merkle root is unchanged.
@@ -149,6 +188,40 @@ enforced here at all.
 
 ### Verified on-chain, not argued
 
+**50 people paid on Arc mainnet in one transaction, with a note each, for 5.8 cents.**
+[`0x3ba827ef…`](https://explorer.arc.io/tx/0x3ba827ef46bfe64725af0bb1ed956f67989861b654d1cb507ce738d3bbde985f)
+· 52 subcalls · 26,628 bytes of calldata · 2,900,002 gas · **$0.0580** · 9.7% of a block.
+
+```
+✅ PAID & PROVEN :  50   (inclusion proof + Transfer in the same tx)
+⏭️  SKIPPED       :   1   (zero address, allowFailure worked through the Memo wrapper)
+❌ PROBLEMS      :   0
+```
+
+Real USDC. Amounts ran 0.000001 to 0.000050 so every Merkle leaf differs, and the
+payees are **unspendable by anyone**, derived as `keccak256(label ‖ index)`, so no
+private key exists for them. That matters: the money provably left and did not come
+back to us. `.agents/rules/fixtures.md` explains the convention.
+
+At the event level, decoded from the receipt:
+
+| | |
+|---|---|
+| USDC `Transfer` logs | **50** |
+| `Memo` events | **50**, aligned, with **no orphaned note** for the failed row |
+| notes bound to the right payee by `callDataHash` | **50 / 50** |
+| node estimate vs actual | 2,924,185 vs 2,900,002, **0.8% high** |
+
+```bash
+python3 scripts/verify-run.py \
+  --tx 0x3ba827ef46bfe64725af0bb1ed956f67989861b654d1cb507ce738d3bbde985f \
+  --proofs fixtures/batch-51-mainnet-proofs.json
+```
+
+The same verifier, unchanged, also checks both testnet runs below.
+
+### The earlier testnet runs
+
 A 50-payee run on Arc testnet:
 [`0x9ef59d48…`](https://explorer.testnet.arc.io/tx/0x9ef59d48708e03aff07a5491ccc4f3996c752f1202abd37eba359850e7f28a79),
 51 subcalls, 13,284 bytes of calldata, 2,382,688 gas, $0.0477.
@@ -180,7 +253,7 @@ zero-address row: [`0x152d39be…`](https://explorer.testnet.arc.io/tx/0x152d39b
 ❌ PROBLEMS      :   0
 ```
 
-The same verifier, unchanged, checks both runs — which is the point: a receipt
+The same verifier, unchanged, checks both runs. That is the point: a receipt
 verifies identically whether notes went on-chain or not.
 
 ```bash
@@ -271,12 +344,12 @@ fixtures/               Merkle proofs for both testnet runs, with and without no
 - [x] `Memo` nesting inside `Multicall3From` confirmed by a signed transaction, with
       `allowFailure` isolation and note binding both verified
 - [x] 9-payee memo run executed: 8 paid with on-chain notes, 1 skipped, $0.0116
-- [x] Source verified on the block explorer — readable Solidity, not bytecode
+- [x] Source verified on the block explorer: readable Solidity, not bytecode
 - [x] `markSkipped` executed on-chain: the failed row flipped to skipped, a paid
       payee did not. **Every function in the contract has now run on a real chain**
-- [ ] Deployed and verified on Arc mainnet
+- [x] **Deployed and verified on Arc mainnet**: 605,687 gas, $0.0121
+- [x] **End-to-end 50-payee mainnet run**: 50 paid with on-chain notes, 1 skipped, $0.0580
 - [ ] Frontend hosted
-- [ ] End-to-end 50-payee mainnet run
 
 ## Honest limits
 
