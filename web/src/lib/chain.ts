@@ -52,11 +52,23 @@ export const MAX_PAYEES = 500;
 /** Arc's floor. Below it a transaction is silently dropped. */
 export const MIN_GAS_PRICE = 20_000_000_000n;
 
-const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID ?? 5042002);
+/**
+ * A var present but blank is the normal state of a freshly copied
+ * `.env.example`, and `??` does not catch it: `"" ?? x` is `""`. Reading the
+ * registry address as an empty string breaks every receipt and points
+ * `recordRun` at nothing, so blanks are treated as unset here rather than
+ * trusted anywhere downstream.
+ */
+function env(value: string | undefined): string | undefined {
+  const v = value?.trim();
+  return v ? v : undefined;
+}
+
+const CHAIN_ID = Number(env(import.meta.env.VITE_CHAIN_ID) ?? 5042002);
 export const chain = CHAIN_ID === arc.id ? arc : arcTestnet;
 export const isMainnet = chain.id === arc.id;
 
-export const PAYFETTI_ADDRESS = (import.meta.env.VITE_PAYFETTI_ADDRESS ??
+export const PAYFETTI_ADDRESS = (env(import.meta.env.VITE_PAYFETTI_ADDRESS) ??
   "0x7dacb26f14af8e844dabbb2dba1d31427204f835") as Hex;
 
 /**
@@ -67,8 +79,7 @@ export const PAYFETTI_ADDRESS = (import.meta.env.VITE_PAYFETTI_ADDRESS ??
 export const ARC_RPC = "https://rpc.mainnet.arc.io";
 export const ARC_TESTNET_RPC = "https://rpc.testnet.arc.io";
 
-export const RPC_URL =
-  import.meta.env.VITE_RPC_URL ?? (isMainnet ? ARC_RPC : ARC_TESTNET_RPC);
+export const RPC_URL = env(import.meta.env.VITE_RPC_URL) ?? (isMainnet ? ARC_RPC : ARC_TESTNET_RPC);
 
 export const EXPLORER = isMainnet ? "https://explorer.arc.io" : "https://explorer.testnet.arc.io";
 
