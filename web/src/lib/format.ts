@@ -18,7 +18,7 @@ export function usdc(units: bigint): string {
   return `${neg ? "-" : ""}${grouped}.${frac.padEnd(2, "0")}`;
 }
 
-/** `0x7061666665…0001` — long enough that two payees cannot be confused. */
+/** `0x7061666665…0001`: long enough that two payees cannot be confused. */
 export function shortHex(value: string, head = 6, tail = 4): string {
   if (value.length <= head + tail + 2) return value;
   return `${value.slice(0, 2 + head)}…${value.slice(-tail)}`;

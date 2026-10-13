@@ -3,7 +3,7 @@ import type { ComponentType } from "react";
 /**
  * The docs index builds itself from the files beside it. A page is one `.mdx`
  * file exporting its own `meta`, so adding, reordering or renaming a page never
- * means editing a component — which is the whole point of keeping prose out of
+ * means editing a component, which is the whole point of keeping prose out of
  * TypeScript.
  */
 

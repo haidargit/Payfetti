@@ -73,7 +73,7 @@ export function buildRunFile(args: {
   };
 }
 
-/** `payfetti-run-2026-10-11-7061a1b2.json` — sorts by date, unique per run. */
+/** `payfetti-run-2026-10-11-7061a1b2.json`: sorts by date, unique per run. */
 export function runFileName(run: BuiltRun): string {
   const day = new Date().toISOString().slice(0, 10);
   return `payfetti-run-${day}-${run.runId.slice(2, 10)}.json`;

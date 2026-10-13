@@ -19,7 +19,7 @@ import type { ParsedRow } from "./parse";
  * The memo form costs 9,299 gas more per payee and writes the note permanently
  * on-chain. Both forms emit the same `Transfer(payer → payee)` log, because
  * `Memo` routes through the `CallFrom` precompile and the payer stays
- * `msg.sender` — so a receipt verifies identically either way.
+ * `msg.sender`, so a receipt verifies identically either way.
  *
  * `allowFailure: true` on every payee call, because Arc reverts transfers to
  * blocklisted addresses and one bad row must not destroy a 200-payee run. A
@@ -49,7 +49,7 @@ export type BuiltRun = {
  * `recordRun` reverts on a `runId` this payer has already used, and
  * `allowFailure: false` propagates that revert to the whole `aggregate3`, so no
  * transfer executes. With a random id that guard only ever caught a resubmission
- * of the *same built batch* — which is the easy case, already prevented by
+ * of the *same built batch*, which is the easy case, already prevented by
  * disabling the button.
  *
  * The case it missed is the dangerous one: a payer signs, the transaction
@@ -101,7 +101,7 @@ export function deriveRunId(args: {
 
 /**
  * `memoId` is the run's own `runId`. The `Memo` event indexes it, so once you
- * know a run's id its notes come back from a single-block `getLogs` — O(1), no
+ * know a run's id its notes come back from a single-block `getLogs`: O(1), no
  * indexer, no backend.
  *
  * That is lookup, not discovery. Arc's public RPC refuses `getLogs` ranges even

@@ -36,7 +36,7 @@ export const GAS_BATCH_OVERHEAD = 39_096n;
 export const GAS_RECORD_RUN = 94_719n;
 
 /**
- * Wrapping each transfer in `Memo` costs 9,299 gas more per payee — $0.000186 at
+ * Wrapping each transfer in `Memo` costs 9,299 gas more per payee, $0.000186 at
  * Arc's 20 Gwei floor, or 3.7c on a 200-payee run. Measured on Arc testnet with
  * `eth_estimateGas`; the bare figure re-measured at 46,291 in the same run,
  * 0.4% off the mainnet number above, which is the drift this method carries.
@@ -92,7 +92,7 @@ export const EXPLORER = isMainnet ? ARC_EXPLORER : ARC_TESTNET_EXPLORER;
  *
  * Anything that cites a specific past transaction has to use this. `txUrl`
  * follows the current network, so a mainnet build would render a mainnet
- * explorer link for a testnet hash — a dead link on the page that is meant to
+ * explorer link for a testnet hash, a dead link on the page that is meant to
  * be our strongest evidence.
  */
 export function txUrlOn(net: "mainnet" | "testnet", hash: string): string {
@@ -227,7 +227,7 @@ export const multicall3FromAbi = [
  * Taken from the verified source at `explorer.testnet.arc.io`, not hand-written.
  *
  * `memoId` is indexed, so setting it to the run's `runId` makes every note in a
- * run retrievable with one `getLogs` call — which is why run history needs no
+ * run retrievable with one `getLogs` call, which is why run history needs no
  * indexer and no backend.
  */
 export const memoAbi = [
