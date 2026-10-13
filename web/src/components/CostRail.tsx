@@ -20,7 +20,7 @@ const ITEMS: Item[] = [
   { sym: "On-chain note", val: "$0.000186", note: "each", arc: true },
   { sym: "Finality", val: "sub-second", arc: true },
   ...RAILS.map((r) => ({ sym: r.name, val: usdRange(r.lo, r.hi), note: "each" })),
-  { sym: "50-payee run", val: usd(0.0477), note: "executed on testnet", arc: true },
+  { sym: "50-payee run", val: usd(0.058), note: "executed on mainnet", arc: true },
   { sym: "Block", val: "30M gas", note: "≈642 payees" },
 ];
 
