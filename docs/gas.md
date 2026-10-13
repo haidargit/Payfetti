@@ -25,6 +25,34 @@
 
 **Marginal cost per payee: 46,459 gas ≈ $0.00093.**
 
+### Where the comparison figures come from
+
+The Arc column is measured. The PayPal column, and the rail table in the README,
+are **published list prices checked October 2026**. They are not benchmarks we ran
+and nothing refreshes them.
+
+| Rail | Figure used | Source |
+|---|---|---|
+| Card / PayPal | $0.30–0.50 | [Stripe](https://stripe.com/pricing) 2.9% + 30c, [PayPal](https://www.paypal.com/us/webapps/mpp/merchant-fees) 3.49% + $0.49 |
+| ACH | ~$0.25 | typical flat origination fee, which varies by bank rather than having one list price |
+| International wire | $10–15 | sender's side only |
+
+Two of the three are deliberately generous to the incumbent:
+
+- **Card counts only the fixed component.** At $1.50 a head Stripe's 2.9% adds
+  another 4.4c on top of the 30c, so the real figure is nearer $0.34. The fixed
+  part is what creates the floor, and the floor is the argument, so the percentage
+  is left out rather than claimed.
+- **Wire sits well below the $25–50 US banks commonly publish** for an outgoing
+  international transfer, and recipients and intermediary banks often take their own
+  cut on top.
+
+Percentage-priced ACH also exists and is cheaper on small amounts: Stripe's is 0.8%
+capped at $5, about 1.2c on a $1.50 payment. Still more than ten times our figure,
+but the flat fee is not universal.
+
+Erring against ourselves costs nothing when the gap is three orders of magnitude.
+
 ### The 50-payee row was sent, not estimated
 
 Arc testnet tx [`0x9ef59d48…28a79`](https://explorer.testnet.arc.io/tx/0x9ef59d48708e03aff07a5491ccc4f3996c752f1202abd37eba359850e7f28a79),
