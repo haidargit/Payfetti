@@ -21,7 +21,9 @@ contract Deploy is Script {
             console2.log("explorer:             https://explorer.arc.io/address/%s", address(payfetti));
         } else if (block.chainid == 5_042_002) {
             console2.log("network:              Arc Testnet");
-            console2.log("explorer:             https://testnet.arcscan.app/address/%s", address(payfetti));
+            console2.log(
+                "explorer:             https://explorer.testnet.arc.io/address/%s", address(payfetti)
+            );
         } else {
             console2.log("network:              local / unknown");
         }

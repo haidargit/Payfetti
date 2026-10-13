@@ -34,4 +34,4 @@ arc_testnet = "https://rpc.testnet.arc.io"
 
 [etherscan]
 arc = {key = "unused", url = "https://explorer.arc.io/api", chain = 5042}
-arc_testnet = {key = "unused", url = "https://testnet.arcscan.app/api", chain = 5042002}
+arc_testnet = {key = "unused", url = "https://explorer.testnet.arc.io/api", chain = 5042002}
