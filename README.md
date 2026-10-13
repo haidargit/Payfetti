@@ -47,9 +47,14 @@ don't pay them $2 and grumble. You never make the offer.
 | Rail               | Per-payment floor |
 | ------------------ | ----------------- |
 | International wire | $10–15            |
-| Card interchange   | $0.25–0.50        |
+| Card / PayPal      | $0.30–0.50        |
 | ACH                | ~$0.25            |
 | **Arc**            | **$0.00093**      |
+
+The Arc figure is measured. The other three are published list prices checked
+October 2026, and two of them are deliberately generous to the incumbent: card
+counts only the fixed component, and wire sits well below the $25–50 US banks
+commonly publish. Provenance and caveats: [`docs/gas.md`](docs/gas.md).
 
 Measured, not estimated. 200 payees in one `aggregate3` costs 9,425,620 gas, about
 **$0.189**. Each extra payee adds 46,459 gas, about **$0.00093**, and that figure

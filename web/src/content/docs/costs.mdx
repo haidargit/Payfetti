@@ -39,15 +39,47 @@ amortises.
 | Rail | Fee per payment |
 | --- | --- |
 | International wire | $10–15 |
-| Card interchange | $0.25–0.50 |
+| Card / PayPal | $0.30–0.50 |
 | ACH | ~$0.25 |
 | **Arc** | **$0.00093** |
 
-Those are each rail's published per-payment fee, not a benchmark we ran. The
-point is the floor: below roughly $2, the fee eats the payment, so on every
+The point is the floor: below roughly $2, the fee eats the payment, so on every
 conventional rail the payment usually does not happen at all. That floor is not
 a tax, it is a hiring filter. If paying someone $2 costs $12, you never make the
 offer.
+
+### Where those three figures come from
+
+They are published list prices, checked **October 2026**. They are not
+measurements of ours, not quotes anyone gave us, and nothing in the app refreshes
+them. The comparison shown in the interface multiplies them by the number of
+payees and nothing more.
+
+**Card / PayPal, $0.30–0.50.** The two ends are two real published fixed
+components: [Stripe](https://stripe.com/pricing) charges 2.9% + 30¢ per
+successful domestic card transaction, and
+[PayPal](https://www.paypal.com/us/webapps/mpp/merchant-fees) charges 3.49% +
+$0.49 on a standard commercial transaction.
+
+**We count only the fixed half, which understates what cards cost.** At $1.50 a
+head, Stripe's 2.9% adds another 4.4¢ on top of the 30¢, so the real figure is
+nearer $0.34. The fixed component is the part that creates the floor, and the
+floor is the argument, so the percentage is left out rather than claimed.
+
+**ACH, ~$0.25.** A typical flat origination fee for an ACH credit, which varies
+by bank and provider rather than having one published price. Percentage-priced
+ACH exists too, and is cheaper on very small amounts: Stripe's is 0.8% capped at
+$5, which on a $1.50 payment is about 1.2¢. Still more than a hundred times our
+figure, but worth knowing the flat fee is not universal.
+
+**International wire, $10–15.** Deliberately well below what US banks commonly
+publish for an outgoing international transfer, which is $25–50, and it counts
+only the sender's side. Recipients and intermediary banks often take their own
+cut on top.
+
+Two of the three are therefore generous to the incumbent. That is on purpose:
+erring against ourselves costs nothing when the gap is three orders of
+magnitude.
 
 ## Two Arc specifics that bite
 
