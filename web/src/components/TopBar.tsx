@@ -2,37 +2,13 @@ import { useAccount, useBalance } from "wagmi";
 import { chain, isMainnet } from "../lib/chain";
 import { usdc } from "../lib/format";
 import { NavLink } from "./NavLink";
+import { Logo } from "./Logo";
 import { WalletMenu } from "./WalletMenu";
-
-function Mark() {
-  return (
-    <span className="mark" aria-hidden="true">
-      {/* One in, many out: the shape of a run. */}
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      >
-        <path d="M2.5 8h3" />
-        <path d="M5.5 8c2.2 0 2.6-4.2 5-4.2" />
-        <path d="M5.5 8h5" />
-        <path d="M5.5 8c2.2 0 2.6 4.2 5 4.2" />
-        <circle cx="12.4" cy="3.8" r="1.1" fill="currentColor" stroke="none" />
-        <circle cx="12.4" cy="8" r="1.1" fill="currentColor" stroke="none" />
-        <circle cx="12.4" cy="12.2" r="1.1" fill="currentColor" stroke="none" />
-      </svg>
-    </span>
-  );
-}
 
 function Wordmark() {
   return (
     <NavLink className="brand" href="#/">
-      <Mark />
+      <Logo />
       <span className="brand-name">Payfetti</span>
     </NavLink>
   );
@@ -72,7 +48,8 @@ export function TopBar({
           {showNetwork && !isMainnet && (
             <span className="net net-test">
               <span className="dot" />
-              Test mode
+              <span className="top-wide">Test mode</span>
+              <span className="top-narrow">Test</span>
             </span>
           )}
         </div>
@@ -82,13 +59,13 @@ export function TopBar({
             <span data-tour="docs">Docs</span>
           </NavLink>
           {onStartTour && (
-            <button type="button" className="btn btn-sm top-link" onClick={onStartTour}>
+            <button type="button" className="btn btn-sm top-link top-wide" onClick={onStartTour}>
               Tour
             </button>
           )}
           <Balance />
           {showPayCta && (
-            <NavLink className="btn btn-sm btn-primary" href="#/pay">
+            <NavLink className="btn btn-sm btn-primary top-wide" href="#/pay">
               Pay a list
             </NavLink>
           )}

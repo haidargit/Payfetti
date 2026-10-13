@@ -1,7 +1,7 @@
 import { EXPLORER, MULTICALL3FROM, PAYFETTI_ADDRESS, addressUrl, chain } from "../lib/chain";
 import { Copyable } from "./Copyable";
 import { Icon } from "./Icon";
-import { TileBand } from "./Band";
+import { Logo } from "./Logo";
 import { NavLink } from "./NavLink";
 
 const REPO = "https://github.com/haidargit/Payfetti";
@@ -10,30 +10,10 @@ export function Footer({ onStartTour }: { onStartTour?: () => void }) {
   return (
     <footer className="foot">
       <div className="foot-in">
-        <TileBand />
-
         <div className="foot-top">
           <div>
             <span className="brand">
-              <span className="mark" aria-hidden="true">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                >
-                  <path d="M2.5 8h3" />
-                  <path d="M5.5 8c2.2 0 2.6-4.2 5-4.2" />
-                  <path d="M5.5 8h5" />
-                  <path d="M5.5 8c2.2 0 2.6 4.2 5 4.2" />
-                  <circle cx="12.4" cy="3.8" r="1.1" fill="currentColor" stroke="none" />
-                  <circle cx="12.4" cy="8" r="1.1" fill="currentColor" stroke="none" />
-                  <circle cx="12.4" cy="12.2" r="1.1" fill="currentColor" stroke="none" />
-                </svg>
-              </span>
+              <Logo />
               <span className="brand-name" style={{ color: "var(--d-ink)" }}>
                 Payfetti
               </span>
@@ -82,15 +62,6 @@ export function Footer({ onStartTour }: { onStartTour?: () => void }) {
               <a className="inline-link" href={REPO} target="_blank" rel="noreferrer">
                 Source on GitHub
                 <Icon name="external" size={12} />
-              </a>
-              <a
-                className="inline-link"
-                href="https://github.com/haidargit"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Icon name="github" size={13} />
-                haidar ali
               </a>
             </div>
           </div>
