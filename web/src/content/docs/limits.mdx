@@ -54,8 +54,15 @@ below a marketplace. If nobody wants to pay 200 people $1, this changes nothing.
 
 ## Still outstanding
 
-- Deployed and verified on Arc mainnet
-- An end-to-end 50-payee mainnet run
+- An end-to-end run at full scale on mainnet. The largest executed so far is 50
+  payees on testnet; mainnet runs to date have been small.
 
-The testnet deployment is live and its source is verified on the explorer, so
-the readable Solidity there is provably the bytecode actually running.
+Payfetti is deployed on Arc mainnet and on Arc testnet, at the same address, with
+byte-identical code. Its source is verified on both explorers, so the readable
+Solidity there is provably the bytecode actually running.
+
+The explorer grades that verification a **partial match**. The build strips the
+metadata trailer solc normally appends, which is what a full match compares
+against, so partial is the ceiling for this bytecode. The code is confirmed; only
+the compiler's paperwork is not re-derivable. The repository README explains the
+trade in full.
