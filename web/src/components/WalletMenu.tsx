@@ -178,7 +178,7 @@ export function WalletMenu() {
         subtitle={
           isConnected
             ? undefined
-            : "Payfetti never takes custody. USDC moves straight from your wallet to your payees."
+            : "Your money stays yours. It goes straight from here to the people you are paying."
         }
       >
         {isConnected && address ? (
@@ -256,7 +256,7 @@ export function WalletMenu() {
                   <Icon name="info" size={15} />
                 </span>
                 <div className="note-body">
-                  <div className="note-title">No wallet extension found in this browser</div>
+                  <div className="note-title">We could not find a wallet in this browser</div>
                   <p style={{ marginTop: 4 }}>
                     If you have one installed, this is usually a private window: extensions stay
                     off there unless you allow each one explicitly. You can still connect a phone
@@ -325,8 +325,8 @@ export function WalletMenu() {
                     ))}
                   </div>
                   <p className="tiny faint" style={{ padding: "10px 2px 2px" }}>
-                    Install one, then come back and connect. Payfetti needs a regular wallet
-                    account, so a smart account such as a Safe cannot pay here.
+                    Install one, come back, and connect. A standard personal wallet is what works
+                    here; shared or smart-contract accounts like a Safe cannot send payments yet.
                   </p>
                 </>
               )}

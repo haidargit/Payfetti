@@ -57,19 +57,24 @@ function Balance() {
 export function TopBar({
   onStartTour,
   showPayCta,
+  showNetwork,
 }: {
   onStartTour?: () => void;
   showPayCta?: boolean;
+  /** Only where it changes what a click means, and never on mainnet. */
+  showNetwork?: boolean;
 }) {
   return (
     <header className="topbar">
       <div className="band-in topbar-in">
         <div className="row" style={{ gap: 12 }}>
           <Wordmark />
-          <span className={isMainnet ? "net net-main" : "net net-test"}>
-            <span className="dot" />
-            {isMainnet ? "Arc mainnet" : "Arc testnet"}
-          </span>
+          {showNetwork && !isMainnet && (
+            <span className="net net-test">
+              <span className="dot" />
+              Test mode
+            </span>
+          )}
         </div>
 
         <div className="row" style={{ gap: 6 }}>

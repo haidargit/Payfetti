@@ -3,13 +3,12 @@ import { Landing } from "./pages/Landing";
 import { Create } from "./pages/Create";
 import { Receipt } from "./pages/Receipt";
 import { Docs } from "./pages/Docs";
-import { isMainnet } from "./lib/chain";
+import { TestModeBanner } from "./components/TestMode";
 import { TopBar } from "./components/TopBar";
 import { CostRail } from "./components/CostRail";
 import { ArcBand } from "./components/ArcBand";
 import { Footer } from "./components/Footer";
 import { Band } from "./components/Band";
-import { Callout } from "./components/Callout";
 import { useTour } from "./components/Tour";
 import { scrollToTop } from "./lib/nav";
 
@@ -48,7 +47,11 @@ export default function App() {
 
   return (
     <>
-      <TopBar onStartTour={onCreate ? startTour : undefined} showPayCta={!onCreate} />
+      <TopBar
+        onStartTour={onCreate ? startTour : undefined}
+        showPayCta={!onCreate}
+        showNetwork={onCreate}
+      />
 
       {/* The cost argument belongs where someone is deciding, not where they
           are working. A payee reading a receipt is not being sold a
@@ -71,17 +74,7 @@ export default function App() {
       ) : (
         <>
           <Band>
-            {!isMainnet && (
-              <div style={{ paddingTop: 18 }}>
-                <Callout tone="warn" title="Arc testnet: these are play funds">
-                  Everything here is real except the money. Top up at{" "}
-                  <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">
-                    faucet.circle.com
-                  </a>
-                  .
-                </Callout>
-              </div>
-            )}
+            <TestModeBanner />
             <Create />
           </Band>
           <ArcBand />

@@ -1,5 +1,6 @@
 import { Band } from "./Band";
 import { Icon } from "./Icon";
+import { ProvenRuns } from "./ProvenRuns";
 
 /**
  * The argument for the product, stated once, in the one place on the page that
@@ -11,12 +12,11 @@ const POINTS = [
   {
     stat: "1",
     unit: "signature",
-    title: "One transaction, every payee.",
+    title: "One approval, everyone paid.",
     body: (
       <>
-        <code>Multicall3From</code> batches the transfers, and Arc's <code>CallFrom</code> precompile
-        keeps you as <code>msg.sender</code>. No approval step, and the contract never holds a cent
-        of yours.
+        You approve once and the whole list goes out together. Nothing to pre-authorise, and the
+        money never passes through us on its way to them.
       </>
     ),
   },
@@ -26,8 +26,8 @@ const POINTS = [
     title: "A tenth of a cent a person.",
     body: (
       <>
-        200 payees cost 9,425,620 gas, about <strong>$0.189</strong> all in. Card rails start at 25
-        cents per payment, which is where a $1 payout stops being worth making.
+        Paying 200 people costs about <strong>19 cents</strong> in total. Cards start at 25 cents
+        for each person, which is the point where paying someone $1 stops being worth the trouble.
       </>
     ),
   },
@@ -37,8 +37,8 @@ const POINTS = [
     title: "Paid means paid.",
     body: (
       <>
-        Deterministic finality in under a second, so the screen can say paid without hedging, and a
-        payee can check it themselves before they close the tab.
+        It settles in under a second, so when the screen says paid, it is done. Your payee can
+        confirm it themselves before they even close the tab.
       </>
     ),
   },
@@ -50,7 +50,7 @@ export function ArcBand() {
       <Band dark id="why-arc">
         <div style={{ paddingTop: 76 }}>
           <p className="caps" style={{ color: "var(--d-acc)" }}>
-            Built on Arc, Circle's stablecoin L1
+            Why it costs so little
           </p>
           <h2
             style={{
@@ -61,7 +61,11 @@ export function ArcBand() {
               maxWidth: "20ch",
             }}
           >
-            USDC is the gas token here. That changes what a payment is allowed to cost.
+            On{" "}
+            <a href="https://www.arc.io" target="_blank" rel="noreferrer">
+              Arc
+            </a>
+            , the fee is paid in dollars. That is why sending someone $1 finally makes sense.
           </h2>
 
           <div
@@ -91,12 +95,14 @@ export function ArcBand() {
             ))}
           </div>
 
-          <p className="small faint" style={{ display: "flex", gap: 8, paddingBottom: 72 }}>
+          <ProvenRuns />
+
+          <p className="small faint" style={{ display: "flex", gap: 8, paddingBottom: 72, marginTop: 34 }}>
             <Icon name="info" size={14} />
             <span>
-              Measured on Arc, not estimated. Base fees here are denominated in USDC and smoothed
-              by design, targeting roughly $0.001 for an ERC-20 transfer, which is why a quote
-              shown before you sign still holds when it lands.{" "}
+              These are real figures, not projections. Arc prices its fees in dollars and keeps
+              them steady on purpose, which is why the price you are shown before approving is the
+              price you actually pay.{" "}
               <a
                 href="https://docs.arc.io/arc/concepts/stable-fee-design"
                 target="_blank"

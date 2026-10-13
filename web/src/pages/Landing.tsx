@@ -1,6 +1,7 @@
 import { Band } from "../components/Band";
 import { Icon } from "../components/Icon";
 import { NavLink } from "../components/NavLink";
+import { Calculator } from "../components/Calculator";
 
 /**
  * The landing page, kept to roughly one screen.
@@ -15,31 +16,31 @@ import { NavLink } from "../components/NavLink";
 const STEPS = [
   {
     n: "1",
-    title: "Paste the list",
+    title: "Bring your list",
     body: (
       <>
-        One payee per line: <code>address, amount, note</code>, straight out of a spreadsheet.
-        Every row is checked before anything is signed.
+        Who gets paid, and how much, straight out of your spreadsheet. We check every line before
+        anything leaves your wallet.
       </>
     ),
   },
   {
     n: "2",
-    title: "Sign once",
+    title: "Approve once",
     body: (
       <>
-        A single transaction pays every row. One bad address cannot stop the others, and sending
-        the same run twice cannot pay anyone twice.
+        One approval pays all of them. A bad entry cannot hold up the rest, and clicking send twice
+        cannot pay anyone twice.
       </>
     ),
   },
   {
     n: "3",
-    title: "Hand out receipts",
+    title: "Everyone gets proof",
     body: (
       <>
-        Each payee gets a link that checks itself against the chain. No account for them, and no
-        trust in us.
+        Each person receives a link that proves they were paid. Nothing for them to sign up for,
+        and nothing they have to take on trust.
       </>
     ),
   },
@@ -49,16 +50,22 @@ export function Landing() {
   return (
     <Band>
       <div className="landing">
-        <p className="kicker">Built on Arc, where USDC is the gas token</p>
+        <p className="kicker">
+          Powered by{" "}
+          <a href="https://www.arc.io" target="_blank" rel="noreferrer">
+            Arc
+          </a>
+          , Circle&rsquo;s stablecoin network
+        </p>
         <h1>Pay everyone at once.</h1>
         <p className="hero-lede">
-          Paste a list of addresses and amounts. One transaction pays every row and leaves each
-          person a receipt they can verify themselves, for about a tenth of a cent each.
+          Bring a list of who gets paid and how much. Everyone is paid in one go, and each person
+          gets proof they can check for themselves. It costs about a tenth of a cent per person.
         </p>
 
         <div className="landing-cta">
           <NavLink className="btn btn-primary" href="#/pay">
-            Pay a list
+            Pay my list
             <Icon name="arrow-right" size={15} />
           </NavLink>
           <NavLink className="btn" href="#/receipt">
@@ -69,9 +76,35 @@ export function Landing() {
           </NavLink>
         </div>
 
-        <p className="tiny faint landing-trust">
-          No account, no custody, no backend. The contract never touches your USDC.
-        </p>
+        <ul className="landing-trust">
+          <li>
+            <Icon name="check" size={13} />
+            Nothing to sign up for
+          </li>
+          <li>
+            <Icon name="check" size={13} />
+            Your money never sits with us
+          </li>
+          <li>
+            <Icon name="check" size={13} />
+            Nothing to take our word for
+          </li>
+        </ul>
+
+        <Calculator />
+
+        <a
+          className="by-line"
+          href="https://github.com/haidargit"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <span className="mark" style={{ width: 26, height: 26, borderRadius: 9 }}>
+            <Icon name="github" size={15} />
+          </span>
+          Built by haidar ali
+          <Icon name="external" size={12} />
+        </a>
 
         <div className="landing-steps">
           {STEPS.map((s) => (

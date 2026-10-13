@@ -62,7 +62,7 @@ export function Footer({ onStartTour }: { onStartTour?: () => void }) {
                 Verified source
               </a>
               <a href={addressUrl(MULTICALL3FROM)} target="_blank" rel="noreferrer">
-                Multicall3From
+                The batching contract
               </a>
               <a href={EXPLORER} target="_blank" rel="noreferrer">
                 Arc explorer
@@ -80,8 +80,17 @@ export function Footer({ onStartTour }: { onStartTour?: () => void }) {
               <NavLink href="#/docs/receipts">What a receipt proves</NavLink>
               <NavLink href="#/docs/limits">Honest limits</NavLink>
               <a className="inline-link" href={REPO} target="_blank" rel="noreferrer">
-                Source
+                Source on GitHub
                 <Icon name="external" size={12} />
+              </a>
+              <a
+                className="inline-link"
+                href="https://github.com/haidargit"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Icon name="github" size={13} />
+                haidar ali
               </a>
             </div>
           </div>
@@ -92,7 +101,10 @@ export function Footer({ onStartTour }: { onStartTour?: () => void }) {
             Registry <Copyable value={PAYFETTI_ADDRESS} short label="contract address" /> on{" "}
             {chain.name}
           </span>
-          <span>MIT. Built for Arc Microgrants.</span>
+          <span>
+            &copy; {new Date().getFullYear()} Payfetti. Open source under the MIT licence, built
+            for Arc Microgrants.
+          </span>
         </div>
 
         <div className="foot-mark" aria-hidden="true">

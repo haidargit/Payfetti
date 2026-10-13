@@ -23,7 +23,7 @@ import "./styles.css";
  *     its own QR sheet for mobile wallets.
  */
 
-const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "";
+const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID?.trim() ?? "";
 
 const config = createConfig({
   chains: [chain],

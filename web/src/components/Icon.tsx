@@ -20,7 +20,8 @@ export type IconName =
   | "spinner"
   | "info"
   | "alert"
-  | "seal";
+  | "seal"
+  | "github";
 
 const paths: Record<IconName, ReactElement> = {
   check: <polyline points="3.5 8.5 6.5 11.5 12.5 4.5" />,
@@ -90,6 +91,12 @@ const paths: Record<IconName, ReactElement> = {
       <path d="M8 6.6v3" />
       <path d="M8 11.3v.1" />
     </>
+  ),
+  github: (
+    <path
+      d="M6.1 14.2c-2.6.8-2.6-1.3-3.6-1.6m7.2 3.3v-2.1c0-.6-.1-.8-.4-1.1 1.9-.2 3.6-.9 3.6-4a3.1 3.1 0 0 0-.8-2.1 2.9 2.9 0 0 0-.1-2.1s-.7-.2-2.3.9a7.7 7.7 0 0 0-4 0C4.1 4.3 3.4 4.5 3.4 4.5a2.9 2.9 0 0 0-.1 2.1 3.1 3.1 0 0 0-.8 2.2c0 3 1.7 3.7 3.6 3.9-.2.3-.4.6-.4 1.1v2.1"
+      strokeWidth="1.35"
+    />
   ),
   seal: (
     <>

@@ -1,4 +1,4 @@
-import { RAILS, railCost } from "../lib/rails";
+import { RAILS, RAILS_CHECKED, railCost } from "../lib/rails";
 import { usd, usdRange } from "../lib/format";
 
 /**
@@ -27,8 +27,8 @@ export function RailCompare({ payees, feeUsdc }: { payees: number; feeUsdc: numb
         );
       })}
       <p className="tiny faint" style={{ marginTop: 10 }}>
-        Fees only, for {payees} {payees === 1 ? "payment" : "payments"}. Ours is this run's live
-        quote; the others are each rail's published per-payment fee multiplied out.
+        Fees only, for {payees} {payees === 1 ? "payment" : "payments"}. Ours is this run&rsquo;s
+        live quote; theirs are published prices as of {RAILS_CHECKED}.
       </p>
     </div>
   );

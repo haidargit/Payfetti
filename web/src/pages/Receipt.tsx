@@ -52,6 +52,31 @@ const RUN_RECORDED_TOPIC = keccak256(
 );
 const MEMO_TOPIC = keccak256(toHex("Memo(address,address,bytes32,bytes32,bytes,uint256)"));
 
+/**
+ * Receipt links are the one thing handed to strangers, so every field arrives
+ * from a URL somebody else may have mangled, truncated or invented. Anything
+ * that does not match its shape is treated as a broken link rather than passed
+ * to viem or to `BigInt`, which throw. One of these used to throw during render
+ * and blank the page, which told a payee nothing except that we were broken.
+ */
+const asAddress = (v: string | null): Hex | null =>
+  v && /^0x[0-9a-fA-F]{40}$/.test(v) ? (v as Hex) : null;
+
+const asHash = (v: string | null): Hex | null =>
+  v && /^0x[0-9a-fA-F]{64}$/.test(v) ? (v as Hex) : null;
+
+const asAmount = (v: string | null): bigint | null => {
+  if (!v || !/^\d{1,30}$/.test(v)) return null;
+  const n = BigInt(v);
+  return n > 0n ? n : null;
+};
+
+/** Every element must be a hash, or the proof is not a proof. */
+const asProof = (v: string | null): Hex[] => {
+  const parts = (v || "").split(",").filter(Boolean);
+  return parts.every((p) => asHash(p)) ? (parts as Hex[]) : [];
+};
+
 export function Receipt() {
   const publicClient = usePublicClient();
   const [inclusion, setInclusion] = useState<Check2>("pending");
@@ -64,12 +89,13 @@ export function Receipt() {
   const [problem, setProblem] = useState<string>("");
 
   const q = new URLSearchParams(window.location.hash.split("?")[1] ?? "");
-  const payer = q.get("payer") as Hex | null;
-  const runId = q.get("runId") as Hex | null;
-  const payee = q.get("payee") as Hex | null;
-  const amount = q.get("amount");
+  const payer = asAddress(q.get("payer"));
+  const runId = asHash(q.get("runId"));
+  const payee = asAddress(q.get("payee"));
+  const amount = asAmount(q.get("amount"));
   const memo = q.get("memo") ?? "";
-  const proof = (q.get("proof") || "").split(",").filter(Boolean) as Hex[];
+  const proof = asProof(q.get("proof"));
+  const amountKey = amount?.toString() ?? "";
 
   useEffect(() => {
     (async () => {
@@ -102,7 +128,7 @@ export function Receipt() {
           address: PAYFETTI_ADDRESS,
           abi: payfettiAbi,
           functionName: "verifyInclusion",
-          args: [payer, runId, payee, BigInt(amount), noteHash, proof],
+          args: [payer, runId, payee, amount, noteHash, proof],
         })) as boolean;
         setInclusion(ok ? "pass" : "fail");
 
@@ -155,7 +181,7 @@ export function Receipt() {
             l.topics[0]?.toLowerCase() === TRANSFER_TOPIC &&
             l.topics[1]?.toLowerCase() === padded(payer) &&
             l.topics[2]?.toLowerCase() === padded(payee) &&
-            BigInt(l.data) >= BigInt(amount),
+            BigInt(l.data) >= amount,
         );
         setTransfer(found ? "pass" : "fail");
         if (!found) {
@@ -178,7 +204,7 @@ export function Receipt() {
           encodeFunctionData({
             abi: erc20Abi,
             functionName: "transfer",
-            args: [payee, BigInt(amount)],
+            args: [payee, amount],
           }),
         ).toLowerCase();
 
@@ -221,7 +247,7 @@ export function Receipt() {
         setNoteCheck("fail");
       }
     })();
-  }, [publicClient, payer, runId, payee, amount, memo]);
+  }, [publicClient, payer, runId, payee, amountKey, memo]);
 
   if (!payer || !runId || !payee || !amount) return <ReceiptLookup />;
 
@@ -276,7 +302,7 @@ export function Receipt() {
             <div style={{ marginTop: 22 }}>
               <div className="caps">Amount</div>
               <div className="doc-amount" style={{ marginTop: 2 }}>
-                {usdc(BigInt(amount))}
+                {usdc(amount)}
                 <span className="unit">USDC</span>
               </div>
             </div>
@@ -345,8 +371,8 @@ export function Receipt() {
           <div className="card-body">
             <h2 style={{ fontSize: 15 }}>How this was checked</h2>
             <p className="small muted" style={{ margin: "6px 0 2px" }}>
-              The first two are what make this a payment. They share one transaction hash, so
-              neither can be forged without the other.
+              The first two are what make this a payment rather than a claim. They happened
+              together, so neither one can be faked on its own.
             </p>
 
             <CheckList>
@@ -399,8 +425,9 @@ export function Receipt() {
 
           <div className="card-foot">
             <p className="tiny faint">
-              Verified in your browser against Arc. This page stores nothing, has no backend, and
-              asks you to trust no one, including us. Re-run the checks any time by reloading.
+              Checked in your own browser, straight against the network. Nothing here is stored,
+              and you do not have to take anyone's word for it, ours included. Reload to check again
+              whenever you like.
             </p>
           </div>
         </article>
@@ -425,8 +452,8 @@ function ReceiptLookup() {
           <div className="card-body">
             <h1 style={{ fontSize: 24 }}>Check a receipt</h1>
             <p className="muted small" style={{ marginTop: 8 }}>
-              Paste a Payfetti receipt link. Everything needed to verify it is inside the link
-              itself, and the check runs here in your browser against Arc.
+              Drop in a Payfetti receipt link. Everything needed to check it travels inside the
+              link, and the checking happens right here in your browser.
             </p>
             <div style={{ marginTop: 16 }}>
               <input
@@ -452,9 +479,8 @@ function ReceiptLookup() {
           </div>
           <div className="card-foot">
             <p className="tiny faint">
-              A receipt is two things at once: a proof the payer committed to your amount, and the
-              USDC transfer from the same transaction. Both are checked, and a link missing either
-              one is reported rather than quietly passed.
+              A real receipt has to show two things: that you were promised the amount, and that
+              the money actually moved. We check both, and tell you plainly if either is missing.
             </p>
           </div>
         </article>

@@ -2,6 +2,7 @@ import { gwei, usd, usdc } from "../lib/format";
 import { BlockMeter } from "./BlockMeter";
 import { RailCompare } from "./RailCompare";
 import { Icon } from "./Icon";
+import { MoneyMode } from "./TestMode";
 
 /**
  * The quote is the whole pitch, so it is sticky and it is exact: the fee shown
@@ -99,13 +100,13 @@ export function QuotePanel({
           </button>
 
           <p className="tiny faint" style={{ marginTop: 9, textAlign: "center" }}>
-            {!isConnected
-              ? "Connect a wallet to send."
-              : balance6 !== null && shortfall6 > 0n
-                ? `Short by ${usdc(shortfall6)} USDC.`
-                : balance6 !== null
-                  ? `Balance ${usdc(balance6)} USDC. No approval step, no custody.`
-                  : "No approval step, no custody."}
+            {!isConnected ? (
+              "Connect a wallet to send."
+            ) : balance6 !== null && shortfall6 > 0n ? (
+              `Short by ${usdc(shortfall6)} USDC.`
+            ) : (
+              <MoneyMode />
+            )}
           </p>
         </div>
       </section>
