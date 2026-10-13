@@ -121,6 +121,13 @@
   }
 }
 
+/*
+ * On a phone the sidebar becomes a strip above the page. It was a sideways
+ * scroller, which put a whole section of the docs off the right edge with
+ * nothing to say it was there. Wrapping chips keep every page in view instead,
+ * and the group headings go, since three of them cost more height than the
+ * eight links they label.
+ */
 @media (max-width: 760px) {
   .docs {
     grid-template-columns: minmax(0, 1fr);
@@ -129,10 +136,26 @@
   .docs-nav-in {
     position: static;
     max-height: none;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    overflow-x: auto;
-    padding-bottom: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    overflow: visible;
+    padding-bottom: 4px;
+  }
+  .docs-group {
+    display: contents;
+  }
+  .docs-group h4 {
+    display: none;
+  }
+  .docs-nav a {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    padding: 7px 13px;
+  }
+  .docs-nav a.is-current {
+    border-color: transparent;
   }
 }
 

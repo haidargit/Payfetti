@@ -39,7 +39,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="rows"]',
     title: "This box is the payee list",
-    body: "One payee per line: <code>address, amount, note</code>. Paste straight from a spreadsheet. Every line is checked before anything is signed. Bad addresses, zero amounts, duplicates and sub-cent rounding are all caught here, because a transfer cannot be undone.",
+    body: "One payee per line: <code>address, amount, note</code>. Paste straight from a spreadsheet. Every line is checked before anything is signed. Malformed addresses, zero amounts, duplicates and sub-cent rounding are all caught here, because a transfer cannot be undone.",
     side: "right",
     align: "start",
   },

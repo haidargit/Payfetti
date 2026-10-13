@@ -6,10 +6,12 @@ import { Icon } from "./Icon";
  * A plain dialog: escape closes it, the backdrop closes it, the page behind
  * does not scroll, and focus starts inside rather than wherever it was.
  *
- * Rendered through a portal, which is not optional here. The header sets
- * `backdrop-filter`, and that makes it the containing block for any
- * `position: fixed` descendant, so a dialog opened from the header would be
- * laid out inside a 68px-tall box instead of the viewport.
+ * Rendered through a portal, so the dialog is laid out against the viewport
+ * whatever it was opened from. The header once set `backdrop-filter`, which
+ * made it the containing block for `position: fixed` descendants and laid a
+ * dialog opened there inside a 68px-tall box. The filter has since gone, but
+ * any ancestor with a filter, a transform or `will-change` does the same
+ * thing, and the wallet picker opens from the header.
  */
 export function Modal({
   open,

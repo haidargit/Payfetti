@@ -69,13 +69,13 @@ export function RunReceipts({
 
   return (
     <>
-      <div className="hero">
+      <div className="pf-intro">
         <Steps at={2} />
         <h1 style={{ marginTop: 16 }}>
           {okCount} {okCount === 1 ? "person" : "people"} paid
           {skippedRows.length > 0 && `, ${skippedRows.length} skipped`}.
         </h1>
-        <p className="hero-lede">
+        <p className="pf-lede">
           {usdc(movedTotal)} USDC moved in one transaction for {usd(feeUsdc)}. Every link below
           proves one payee's own payment against Arc, with no account and no trust in us.
         </p>

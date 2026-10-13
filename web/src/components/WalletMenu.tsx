@@ -167,7 +167,10 @@ export function WalletMenu() {
             </span>
           )
         ) : (
-          "Connect wallet"
+          <>
+            <span className="top-wide">Connect wallet</span>
+            <span className="top-narrow">Connect</span>
+          </>
         )}
       </button>
 

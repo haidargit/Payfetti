@@ -87,7 +87,7 @@ export function Calculator() {
               id="calc-each"
               type="range"
               min={0.25}
-              max={25}
+              max={100}
               step={0.25}
               value={each}
               onChange={(e) => setEach(Number(e.target.value))}
@@ -95,8 +95,17 @@ export function Calculator() {
           </label>
 
           <p className="tiny faint">
-            All of it fits in a single payment, with a note attached to each one. Priced at
-            Arc&rsquo;s floor rate, so this is the most it would cost.
+            All of it fits in a single payment, with a note attached to each one. The sliders stop
+            at {count(MAX_PAYEES)} people and {usd(100)} each, which is this calculator&rsquo;s
+            range rather than a limit on what you can send.
+          </p>
+
+          <p className="small faint calc-note">
+            <Icon name="info" size={14} />
+            <span>
+              Priced at Arc&rsquo;s floor rate, the 20 Gwei minimum the network charges. Quoting at
+              the floor makes this a ceiling: the real cost can come in under it, never over.
+            </span>
           </p>
         </div>
 
@@ -128,8 +137,8 @@ export function Calculator() {
           </div>
 
           <p className="tiny faint calc-source">
-            Ours is worked out from what a run actually costs. Theirs are their own published
-            prices as of {RAILS_CHECKED}, taking the cheapest end of each.{" "}
+            Our cost is measured from a real run. The rest are each provider&rsquo;s published
+            price as of {RAILS_CHECKED}, taken at their cheapest.{" "}
             <NavLink href="#/docs/costs">Where these come from</NavLink>.
           </p>
 

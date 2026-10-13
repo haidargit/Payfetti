@@ -27,7 +27,7 @@ const POINTS = [
     body: (
       <>
         Paying 200 people costs about <strong>19 cents</strong> in total. Cards start at 25 cents
-        for each person, which is the point where paying someone $1 stops being worth the trouble.
+        a person, so the smallest payments often cost more to send than they are worth.
       </>
     ),
   },
@@ -37,8 +37,8 @@ const POINTS = [
     title: "Paid means paid.",
     body: (
       <>
-        It settles in under a second, so when the screen says paid, it is done. Your payee can
-        confirm it themselves before they even close the tab.
+        It settles in under a second, so when the screen says paid, it is done. Anyone you pay can
+        confirm it in a moment, without having to ask you.
       </>
     ),
   },
@@ -65,7 +65,7 @@ export function ArcBand() {
             <a href="https://www.arc.io" target="_blank" rel="noreferrer">
               Arc
             </a>
-            , the fee is paid in dollars. That is why sending someone $1 finally makes sense.
+            , fees are paid in dollars and stay small, which keeps a $1 payment worth sending.
           </h2>
 
           <div

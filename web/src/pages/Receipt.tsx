@@ -35,7 +35,7 @@ import { NavLink } from "../components/NavLink";
  * A run sent with on-chain notes adds a third, independent reading: Arc's `Memo`
  * event carries `keccak256(callData)`, so recomputing the transfer calldata and
  * matching that hash proves the published note belongs to THIS transfer and not
- * some other payee's. Its absence is not a failure — it only means the payer
+ * some other payee's. Its absence is not a failure: it only means the payer
  * chose to keep notes off-chain.
  *
  * `wasSkipped` is read only when half 2 fails, which is the one case where the
@@ -480,7 +480,8 @@ function ReceiptLookup() {
           <div className="card-foot">
             <p className="tiny faint">
               A real receipt has to show two things: that you were promised the amount, and that
-              the money actually moved. We check both, and tell you plainly if either is missing.
+              the money actually moved. Both are checked here, and if either is missing the page
+              says so plainly.
             </p>
           </div>
         </article>
