@@ -15,7 +15,7 @@ import {
   payfettiAbi,
 } from "../lib/chain";
 import { EXAMPLE, formatUsdc, parseRows } from "../lib/parse";
-import { buildRun, newRunId, type BuiltRun } from "../lib/batch";
+import { buildRun, deriveRunId, type BuiltRun } from "../lib/batch";
 import { usd, usdc } from "../lib/format";
 import { Callout } from "../components/Callout";
 import { Field, Switch } from "../components/Field";
@@ -160,7 +160,31 @@ export function Create() {
     setError("");
     setPhase("sending");
     try {
-      const run = buildRun(parsed.rows, label, newRunId(), { onChainNotes });
+      // Derived from the list itself, so an identical list under the same label
+      // yields the same id and the chain refuses the second attempt. See
+      // `deriveRunId` for the failure this closes.
+      const runId = deriveRunId({ payer: address, rows: parsed.rows, label });
+
+      // Ask before signing rather than letting `recordRun` revert. A payer whose
+      // tab reloaded mid-send cannot tell a lost receipt from a lost payment, and
+      // "already went through" is the answer they need, not a failed transaction.
+      const already = (await publicClient.readContract({
+        address: PAYFETTI_ADDRESS,
+        abi: payfettiAbi,
+        functionName: "runExists",
+        args: [address, runId],
+      })) as boolean;
+
+      if (already) {
+        setPhase("error");
+        setError(
+          "This exact run has already been paid from this wallet. Nobody was charged again. " +
+            "If you meant to pay the same list a second time, change the run label first.",
+        );
+        return;
+      }
+
+      const run = buildRun(parsed.rows, label, runId, { onChainNotes });
       setBuilt(run);
       setSentFee(feeUsdc);
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { decodeFunctionData, fromHex, keccak256, toHex, type Hex } from "viem";
-import { buildRun } from "../src/lib/batch";
+import { buildRun, deriveRunId } from "../src/lib/batch";
 import { MEMO, USDC, erc20Abi, memoAbi, PAYFETTI_ADDRESS, payfettiAbi } from "../src/lib/chain";
 import type { ParsedRow } from "../src/lib/parse";
 
@@ -143,5 +143,86 @@ describe("batch shape is unchanged by the memo option", () => {
     // tree, which is exactly why Memo is what puts them on-chain.
     const run = buildRun(rows(), "probe", RUN_ID);
     expect(run.noteHash).toBe(keccak256(toHex("probe")));
+  });
+});
+
+/**
+ * The double-pay guard, which is the whole reason runIds are derived rather
+ * than random.
+ *
+ * The failure these cover is not a double click — that is already blocked by
+ * disabling the button. It is a payer who signs, loses the tab before the
+ * receipt lands, reopens the app and pastes the same list. With a random id
+ * that second attempt was a fresh run and everyone was paid twice.
+ */
+describe("deriveRunId closes the lost-tab double-pay hole", () => {
+  const PAYER = "0x8d026a62f466f7c457be8e3e139c701b791e668e" as Hex;
+  const OTHER = "0x00000000000000000000000000000000deadbeef" as Hex;
+
+  it("the same list, payer and label derives the same id", () => {
+    // Two independent attempts, as if the first tab had been lost.
+    const first = deriveRunId({ payer: PAYER, rows: rows(), label: "October stipend" });
+    const second = deriveRunId({ payer: PAYER, rows: rows(), label: "October stipend" });
+    expect(second).toBe(first);
+  });
+
+  it("is stable across calls separated in time, unlike a clock seed", async () => {
+    const before = deriveRunId({ payer: PAYER, rows: rows(), label: "x" });
+    await new Promise((r) => setTimeout(r, 25));
+    expect(deriveRunId({ payer: PAYER, rows: rows(), label: "x" })).toBe(before);
+  });
+
+  it("does not care how the wallet cased the payer address", () => {
+    const upper = ("0x" + PAYER.slice(2).toUpperCase()) as Hex;
+    expect(deriveRunId({ payer: upper, rows: rows(), label: "x" })).toBe(
+      deriveRunId({ payer: PAYER, rows: rows(), label: "x" }),
+    );
+  });
+
+  // Each of these is a genuinely different run and must be payable.
+  it("changes when the label changes, so a repeat payout stays possible", () => {
+    expect(deriveRunId({ payer: PAYER, rows: rows(), label: "October stipend" })).not.toBe(
+      deriveRunId({ payer: PAYER, rows: rows(), label: "November stipend" }),
+    );
+  });
+
+  it("changes when an amount changes", () => {
+    const edited = rows();
+    edited[0] = { ...edited[0], amount: 1001n };
+    expect(deriveRunId({ payer: PAYER, rows: edited, label: "x" })).not.toBe(
+      deriveRunId({ payer: PAYER, rows: rows(), label: "x" }),
+    );
+  });
+
+  it("changes when a payee changes", () => {
+    const edited = rows();
+    edited[1] = { ...edited[1], payee: OTHER };
+    expect(deriveRunId({ payer: PAYER, rows: edited, label: "x" })).not.toBe(
+      deriveRunId({ payer: PAYER, rows: rows(), label: "x" }),
+    );
+  });
+
+  it("changes when a payee is dropped", () => {
+    expect(deriveRunId({ payer: PAYER, rows: rows().slice(0, 1), label: "x" })).not.toBe(
+      deriveRunId({ payer: PAYER, rows: rows(), label: "x" }),
+    );
+  });
+
+  it("differs per payer, so two payers can run identical lists", () => {
+    expect(deriveRunId({ payer: OTHER, rows: rows(), label: "x" })).not.toBe(
+      deriveRunId({ payer: PAYER, rows: rows(), label: "x" }),
+    );
+  });
+
+  it("refuses an empty run rather than deriving a meaningless id", () => {
+    expect(() => deriveRunId({ payer: PAYER, rows: [], label: "x" })).toThrow();
+  });
+
+  it("feeds the derived id straight through to recordRun and the memos", () => {
+    const runId = deriveRunId({ payer: PAYER, rows: rows(), label: "x" });
+    const run = buildRun(rows(), "x", runId, { onChainNotes: true });
+    expect(run.runId).toBe(runId);
+    const { args } = decodeFunctionData({ abi: memoAbi, data: run.calls[0].callData });
+    expect(args[2]).toBe(runId);
   });
 });
