@@ -83,12 +83,18 @@ jobs:
       # Fail here rather than three minutes later inside wrangler, where a
       # missing account id surfaces as an opaque authentication error.
       - name: Preflight
+        env:
+          # Through the environment, never interpolated into the script: a value
+          # carrying a quote would otherwise be parsed as shell.
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
         run: |
           set -euo pipefail
           missing=
-          [ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || missing="$missing CLOUDFLARE_API_TOKEN(secret)"
-          [ -n "${{ vars.CLOUDFLARE_ACCOUNT_ID }}" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID(variable)"
-          [ -n "${{ vars.CLOUDFLARE_PAGES_PROJECT }}" ] || missing="$missing CLOUDFLARE_PAGES_PROJECT(variable)"
+          [ -n "$CF_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN(secret)"
+          [ -n "$CF_ACCOUNT_ID" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID(variable)"
+          [ -n "$CF_PAGES_PROJECT" ] || missing="$missing CLOUDFLARE_PAGES_PROJECT(variable)"
           if [ -n "$missing" ]; then
             echo "::error::Not configured:$missing. All three are emitted by \`terraform output\` in the infrastructure repo."
             exit 1
