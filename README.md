@@ -291,6 +291,28 @@ fixtures/               Merkle proofs for every run cited here
 - Payfetti doesn't create work. It makes paying for work that already exists possible,
   which is one layer below a marketplace.
 
+## Contributing
+
+Payfetti leaves plenty of surface worth building on, and pull requests are genuinely
+welcome. Bug fixes, refactors, sharper error messages and tests that widen coverage
+are all valuable contributions here.
+
+Two things worth knowing first.
+
+**The Merkle tree exists three times**, in `contracts/src/Payfetti.sol`,
+`web/src/lib/merkle.ts` and `scripts/keccak.py`, and all three have to agree byte for
+byte. When they drift, every receipt silently returns false with nothing to debug.
+`web/tests/merkle.test.ts` pins them against values the deployed contract has already
+accepted, so please run it if you touch any of the three.
+
+**Security issues do not belong in a pull request.**
+[`SECURITY.md`](SECURITY.md) sets out how to report one.
+
+Beyond the commands in [Build and test](#build-and-test), CI also runs
+`forge fmt --check`, `npm run typecheck` and `npm run build`. A green run is all a
+pull request needs. [`AGENTS.md`](AGENTS.md) carries the invariants and the house
+style for comments and commit messages.
+
 ## Disclosure
 
 Built with AI assistance, disclosed per Arc Microgrants submission requirements.
