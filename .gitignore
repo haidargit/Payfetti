@@ -17,6 +17,8 @@ web/*.tsbuildinfo
 .env
 .env.*
 !.env.example
+# chain id and the public registry address
+!.env.production
 *.key
 *.pem
 keystore/
