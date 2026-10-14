@@ -62,8 +62,7 @@ export function parseRows(input: string): ParseResult {
     }
     const payee = payeeRaw.toLowerCase() as Hex;
 
-    // Arc reverts any non-zero transfer to the zero address, which would waste
-    // the slot and show up as a skipped payee. Catch it here instead.
+    // Arc reverts a non-zero transfer to the zero address, so catch it here.
     if (payee === ZERO) {
       errors.push({ line, raw: trimmed, reason: "zero address, which Arc always reverts" });
       return;

@@ -28,10 +28,8 @@ import { Steps } from "../components/Steps";
 type Phase = "edit" | "sending" | "done" | "error";
 
 /**
- * Arc's `CallFrom` precompile accepts only EOAs, so a smart contract account
- * cannot pay through Payfetti at all. A wallet like that connects perfectly
- * well and then reverts at send time, which is a terrible place to find out.
- * Bytecode at the address is the test.
+ * `CallFrom` accepts only EOAs, so a smart account connects fine and reverts at
+ * send time. Bytecode at the address is the test.
  */
 function useIsContractAccount(address: Hex | undefined) {
   const publicClient = usePublicClient();
@@ -61,14 +59,10 @@ function useIsContractAccount(address: Hex | undefined) {
 }
 
 /**
- * Whether the run registry actually exists on the chain we are pointed at.
- *
- * This is not paranoia. `aggregate3` dispatches with a low-level call, and a
- * call to an address holding no code returns success, so `allowFailure: false`
- * on `recordRun` does NOT catch a missing registry. The transfers would all
- * execute with real money, the run would never be recorded, every receipt would
- * fail to verify, and the double-pay guard would be gone. One wrong
- * `VITE_CHAIN_ID` is all it takes, so check rather than trust.
+ * A low-level call to an address with no code returns success, so
+ * `allowFailure: false` does not catch a missing registry. The transfers would
+ * spend real money with nothing recorded and no double-pay guard. One wrong
+ * `VITE_CHAIN_ID` is all it takes.
  */
 function useRegistryDeployed() {
   const publicClient = usePublicClient();
@@ -101,9 +95,8 @@ export function Create() {
 
   const [text, setText] = useState(EXAMPLE);
   const [label, setLabel] = useState("Payfetti run");
-  // On by default: an on-chain note is the difference between a receipt that
-  // survives on its own and one that only exists in a link you have to send.
-  // Costs 9,299 gas per payee and publishes the note text, so it can be turned off.
+  // On by default: the note makes a receipt survive without the link. Costs
+  // 9,299 gas per payee and publishes the text, so it can be turned off.
   const [onChainNotes, setOnChainNotes] = useState(true);
   const [phase, setPhase] = useState<Phase>("edit");
   const [error, setError] = useState<string>("");
@@ -160,14 +153,12 @@ export function Create() {
     setError("");
     setPhase("sending");
     try {
-      // Derived from the list itself, so an identical list under the same label
-      // yields the same id and the chain refuses the second attempt. See
-      // `deriveRunId` for the failure this closes.
+      // Derived from the list, so a repeat under the same label collides and
+      // the chain refuses it. See `deriveRunId`.
       const runId = deriveRunId({ payer: address, rows: parsed.rows, label });
 
-      // Ask before signing rather than letting `recordRun` revert. A payer whose
-      // tab reloaded mid-send cannot tell a lost receipt from a lost payment, and
-      // "already went through" is the answer they need, not a failed transaction.
+      // Ask before signing: a payer whose tab reloaded mid-send needs "already
+      // went through", not a revert.
       const already = (await publicClient.readContract({
         address: PAYFETTI_ADDRESS,
         abi: payfettiAbi,
@@ -201,8 +192,7 @@ export function Create() {
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== "success") throw new Error("transaction reverted");
 
-      // Which payees actually received a transfer? Read it from the logs rather
-      // than assuming. This is half two of the receipt.
+      // Read who was actually paid from the logs. Half two of the receipt.
       const paid = new Set<string>();
       for (const log of receipt.logs) {
         try {
@@ -244,10 +234,7 @@ export function Create() {
     }
   }
 
-  /**
-   * Writes the failed payees into the registry. Separate transaction by
-   * necessity: which transfers reverted is only known once the batch is mined.
-   */
+  /** Separate transaction: which transfers reverted is known only once mined. */
   async function recordSkips(payees: Hex[]) {
     if (!walletClient || !publicClient || !address || !built) return;
     setRecordingSkips(true);

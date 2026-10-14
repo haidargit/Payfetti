@@ -10,14 +10,9 @@ export const USDC = "0x3600000000000000000000000000000000000000" as const;
 export const MULTICALL3FROM = "0x522fAf9A91c41c443c66765030741e4AaCe147D0" as const;
 
 /**
- * Arc's predeployed `Memo`. Wraps one call and emits a `Memo` event carrying
- * `keccak256(callData)` plus arbitrary bytes, routing the inner call through the
- * `CallFrom` precompile so the payer stays `msg.sender`.
- *
- * Nesting it inside `Multicall3From.aggregate3` is what lets one transaction
- * carry N transfers each with its own on-chain note. Circle's docs describe the
- * two contracts separately and never state that the combination works, so it was
- * measured on Arc testnet rather than assumed: see `docs/memo.md`.
+ * Arc's predeployed `Memo`. Wraps one call, emits `keccak256(callData)` plus
+ * arbitrary bytes, and routes through `CallFrom` so the payer stays
+ * `msg.sender`. Nesting it inside `aggregate3` was measured: `docs/memo.md`.
  */
 export const MEMO = "0x5294E9927c3306DcBaDb03fe70b92e01cCede505" as const;
 
@@ -35,29 +30,18 @@ export const GAS_PER_PAYEE = 46_459n;
 export const GAS_BATCH_OVERHEAD = 39_096n;
 export const GAS_RECORD_RUN = 94_719n;
 
-/**
- * Wrapping each transfer in `Memo` costs 9,299 gas more per payee, $0.000186 at
- * Arc's 20 Gwei floor, or 3.7c on a 200-payee run. Measured on Arc testnet with
- * `eth_estimateGas`; the bare figure re-measured at 46,291 in the same run,
- * 0.4% off the mainnet number above, which is the drift this method carries.
- */
+/** `Memo` costs 9,299 gas more per payee, $0.000186 at the floor. */
 export const GAS_PER_PAYEE_MEMO = 55_589n;
 
-/**
- * Max payees in one 30M-gas transaction is ~647 bare, ~539 with memos. We cap
- * well below the tighter of the two so the limit never depends on the mode.
- */
+/** ~647 bare, ~539 with memos, so cap below both and ignore the mode. */
 export const MAX_PAYEES = 500;
 
 /** Arc's floor. Below it a transaction is silently dropped. */
 export const MIN_GAS_PRICE = 20_000_000_000n;
 
 /**
- * A var present but blank is the normal state of a freshly copied
- * `.env.example`, and `??` does not catch it: `"" ?? x` is `""`. Reading the
- * registry address as an empty string breaks every receipt and points
- * `recordRun` at nothing, so blanks are treated as unset here rather than
- * trusted anywhere downstream.
+ * A copied `.env.example` leaves vars present but blank, and `"" ?? x` is `""`.
+ * Blanks are unset here, so an empty address never reaches `recordRun`.
  */
 function env(value: string | undefined): string | undefined {
   const v = value?.trim();
@@ -87,13 +71,8 @@ export const ARC_TESTNET_EXPLORER = "https://explorer.testnet.arc.io";
 export const EXPLORER = isMainnet ? ARC_EXPLORER : ARC_TESTNET_EXPLORER;
 
 /**
- * An explorer link for a transaction on a **named** network, rather than on
- * whichever network the app happens to be pointed at.
- *
- * Anything that cites a specific past transaction has to use this. `txUrl`
- * follows the current network, so a mainnet build would render a mainnet
- * explorer link for a testnet hash, a dead link on the page that is meant to
- * be our strongest evidence.
+ * For a transaction on a named network, not the current one. `txUrl` follows
+ * the build, so a mainnet build would link a testnet hash to a dead page.
  */
 export function txUrlOn(net: "mainnet" | "testnet", hash: string): string {
   return `${net === "mainnet" ? ARC_EXPLORER : ARC_TESTNET_EXPLORER}/tx/${hash}`;
@@ -224,11 +203,8 @@ export const multicall3FromAbi = [
 ] as const;
 
 /**
- * Taken from the verified source at `explorer.testnet.arc.io`, not hand-written.
- *
- * `memoId` is indexed, so setting it to the run's `runId` makes every note in a
- * run retrievable with one `getLogs` call, which is why run history needs no
- * indexer and no backend.
+ * From the verified source, not hand-written. `memoId` is indexed, so setting
+ * it to `runId` makes a run's notes one `getLogs` call.
  */
 export const memoAbi = [
   {

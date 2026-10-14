@@ -29,10 +29,7 @@ export function leafOf(payee: Hex, amount: bigint, noteHash: Hex): Hex {
   return keccak256(inner);
 }
 
-/**
- * Sorted-pair hashing, so proofs carry no left/right flags. For two bytes32
- * values `abi.encode(a, b)` is plain concatenation.
- */
+/** Sorted-pair, so proofs carry no flags. For two bytes32, `abi.encode` is concat. */
 export function hashPair(a: Hex, b: Hex): Hex {
   return a.toLowerCase() <= b.toLowerCase()
     ? keccak256(concat([a, b]))
@@ -45,11 +42,7 @@ export type Tree = {
   levels: Hex[][];
 };
 
-/**
- * Odd nodes are promoted unchanged to the next level, the same rule
- * `scripts/keccak.py` uses. Duplicating the last leaf would give a different
- * root, so this has to match everywhere.
- */
+/** Odd nodes promote unchanged. Duplicating the last leaf gives a different root. */
 export function buildTree(leaves: Hex[]): Tree {
   if (leaves.length === 0) throw new Error("cannot build a tree with no leaves");
 
@@ -84,10 +77,7 @@ export function proofFor(tree: Tree, index: number): Hex[] {
   return proof;
 }
 
-/**
- * Self-test before a transaction is built. Never a substitute for the on-chain
- * `verifyInclusion` a payee relies on.
- */
+/** Self-test only. Never a substitute for the on-chain `verifyInclusion`. */
 export function verifyProof(leaf: Hex, proof: Hex[], root: Hex): boolean {
   let computed = leaf;
   for (const p of proof) computed = hashPair(computed, p);

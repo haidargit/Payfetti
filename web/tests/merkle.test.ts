@@ -3,17 +3,9 @@ import { keccak256, toHex, type Hex } from "viem";
 import { buildTree, hashPair, leafOf, proofFor, verifyProof } from "../src/lib/merkle";
 
 /**
- * Cross-implementation parity tests.
- *
- * docs/security.md flags this as a Medium risk: if the TypeScript tree disagrees
- * with the Solidity verifier, every receipt silently fails. These vectors are not
- * invented: they are values the deployed contract on Arc testnet has already
- * accepted, so passing here means TS agrees with Solidity on a real chain.
- *
- * Sources:
- *   probe tx   0xa0cead74…  (2-leaf run)
- *   50-payee   0x9ef59d48708e03aff07a5491ccc4f3996c752f1202abd37eba359850e7f28a79
- *   oracle     scripts/keccak.py (independent Python impl, same vectors)
+ * Cross-implementation parity. If the TypeScript tree disagrees with the
+ * Solidity verifier, every receipt silently fails. These vectors are values the
+ * deployed contract already accepted, cross-checked against `scripts/keccak.py`.
  */
 
 const NOTE_PROBE = "0x1f99bd845311ac79f63ed3e74c72090f4a9cbe65f9af3b961940e102d6e3dfb4" as Hex;

@@ -1,21 +1,7 @@
 /**
- * What the rails Payfetti replaces charge per payment.
- *
- * These are published list prices, not measurements of ours and not quotes
- * anybody gave us, so the interface must never present them as benchmarked.
- * Provenance for each line, with the caveats, lives in the costs doc; keep the
- * two in step when these change.
- *
- * Two of them are deliberately generous to the incumbent:
- *
- *   Card only counts the fixed component. Real card pricing is a percentage
- *   plus that fixed fee, so the true cost is higher than what we show.
- *
- *   Wire uses $10-15 when US banks commonly publish $25-50 for an outgoing
- *   international transfer.
- *
- * Erring against ourselves is the point. The argument is the per-payment floor,
- * and it does not need help.
+ * Published list prices, never benchmarks of ours, so the interface must not
+ * present them as measured. Card counts only the fixed component and wire sits
+ * below what banks publish, both erring against us. Provenance: `docs/gas.md`.
  */
 
 export type Rail = {
