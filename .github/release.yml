@@ -1,0 +1,15 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+  categories:
+    - title: Contract
+      labels: ["contract"]
+    - title: Web
+      labels: ["web"]
+    - title: Documentation
+      labels: ["docs"]
+    - title: Infrastructure
+      labels: ["infra", "ci"]
+    - title: Other changes
+      labels: ["*"]

@@ -1,0 +1,177 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  # Re-deploy a tag whose release failed downstream of the build. Choose the tag
+  # as the ref in the "Run workflow" dialog; no new tag is cut, and the release
+  # step is skipped because the ref is picked by hand.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Two releases racing would leave the site on whichever upload finished last
+# rather than whichever tag is newer. Never cancel in progress: a run killed
+# between the upload and the release would leave the two disagreeing.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    # The same checks that gate every pull request, re-run at the tag.
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+        working-directory: web
+
+      - run: npm run build
+        working-directory: web
+      - name: Assert the bundle is mainnet
+        working-directory: web/dist/assets
+        run: |
+          set -euo pipefail
+
+          if ! grep -qF '0x7dACb26F14af8E844dABBB2DBA1D31427204f835' ./*.js; then
+            echo "::error::.env.production did not reach the build — the checksummed registry address is absent, so the source defaults were used."
+            exit 1
+          fi
+
+          if grep -qF '"5042002"' ./*.js; then
+            echo "::error::VITE_CHAIN_ID was inlined as 5042002 (Arc testnet). Refusing to publish a testnet build to the production URL."
+            exit 1
+          fi
+
+          if ! grep -qF '"5042"' ./*.js; then
+            echo "::error::VITE_CHAIN_ID was not inlined as 5042 (Arc mainnet). Check .env.production."
+            exit 1
+          fi
+
+          echo "Arc mainnet (5042), registry 0x7dACb26F…04f835."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: web/dist
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://${{ vars.CLOUDFLARE_PAGES_PROJECT }}.pages.dev
+    outputs:
+      alias_url: ${{ steps.pages.outputs.pages-deployment-alias-url }}
+      immutable_url: ${{ steps.pages.outputs.deployment-url }}
+      deployment_id: ${{ steps.pages.outputs.pages-deployment-id }}
+    steps:
+      # Fail here rather than three minutes later inside wrangler, where a
+      # missing account id surfaces as an opaque authentication error.
+      - name: Preflight
+        run: |
+          set -euo pipefail
+          missing=
+          [ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || missing="$missing CLOUDFLARE_API_TOKEN(secret)"
+          [ -n "${{ vars.CLOUDFLARE_ACCOUNT_ID }}" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID(variable)"
+          [ -n "${{ vars.CLOUDFLARE_PAGES_PROJECT }}" ] || missing="$missing CLOUDFLARE_PAGES_PROJECT(variable)"
+          if [ -n "$missing" ]; then
+            echo "::error::Not configured:$missing. All three are emitted by \`terraform output\` in the infrastructure repo."
+            exit 1
+          fi
+
+      # Only so the deployment carries the tag's commit in the Cloudflare
+      # dashboard. The bundle itself comes from the artifact, never rebuilt here
+      # — a second build could differ from the one the guard above checked.
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - id: pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          # `--branch` decides production vs preview, and has nothing to do with
+          # the git ref: a tag push has no branch, so without this the upload
+          # lands as a preview on a random host and the live URL keeps serving
+          # the previous build. It must match `production_branch` in Terraform.
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main --commit-dirty=true
+
+      - name: Summary
+        run: |
+          {
+            echo "### Deployed"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Live | https://${{ vars.CLOUDFLARE_PAGES_PROJECT }}.pages.dev |"
+            echo "| This deployment | ${{ steps.pages.outputs.deployment-url }} |"
+            echo "| Commit | \`${{ github.sha }}\` |"
+            echo "| Network | Arc mainnet (5042) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    needs: deploy
+    # A hand-run workflow_dispatch re-deploys an existing tag; it must not
+    # create or overwrite that tag's release.
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Full history, otherwise generated release notes have no previous tag
+          # to diff against and come out empty.
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      # Attached so the release carries the exact bytes that went live, rather
+      # than only a commit someone would have to rebuild to inspect.
+      - name: Package the deployed bundle
+        run: tar -czf "payfetti-web-${{ github.ref_name }}.tar.gz" -C dist .
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          # Contributors and commits, grouped per .github/release.yml. Appended
+          # below the body.
+          generate_release_notes: true
+          body: |
+            **Live:** https://${{ vars.CLOUDFLARE_PAGES_PROJECT }}.pages.dev
+            **This deployment:** ${{ needs.deploy.outputs.immutable_url }}
+
+            | | |
+            |---|---|
+            | Network | Arc mainnet, chain id `5042` |
+            | Registry | [`0x7dACb26F…04f835`](https://explorer.arc.io/address/0x7dACb26F14af8E844dABBB2DBA1D31427204f835) |
+            | Commit | `${{ github.sha }}` |
+
+            `payfetti-web-${{ github.ref_name }}.tar.gz` is the bundle that was
+            uploaded, byte for byte.
+          files: payfetti-web-${{ github.ref_name }}.tar.gz
+          fail_on_unmatched_files: true
