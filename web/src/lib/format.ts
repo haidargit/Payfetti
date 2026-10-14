@@ -3,11 +3,8 @@ import { formatUsdc } from "./parse";
 /** Display helpers. Nothing here rounds a value that money depends on. */
 
 /**
- * USDC for a column: grouped, and never fewer than two decimal places, so
- * amounts line up as money rather than as "1.5". Sub-cent amounts keep every
- * place they have, since a payout of 0.0005 is a real row here.
- *
- * `formatUsdc` stays the canonical form and is what the run file exports.
+ * Minimum two decimals so a column lines up as money, but sub-cent amounts keep
+ * every place, since 0.0005 is a real row. `formatUsdc` is the canonical form.
  */
 export function usdc(units: bigint): string {
   const exact = formatUsdc(units);
@@ -24,10 +21,7 @@ export function shortHex(value: string, head = 6, tail = 4): string {
   return `${value.slice(0, 2 + head)}…${value.slice(-tail)}`;
 }
 
-/**
- * Fees on Arc land four to six decimal places down, so a fixed 2dp would print
- * every one of them as "$0.00" and lose the entire argument for the product.
- */
+/** Arc fees land 4 to 6 places down, where a fixed 2dp prints "$0.00". */
 export function usd(n: number): string {
   if (!Number.isFinite(n)) return "—";
   if (n === 0) return "$0";
@@ -36,8 +30,7 @@ export function usd(n: number): string {
     const dp = abs >= 1000 ? 0 : 2;
     return `$${n.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp })}`;
   }
-  // Below a dollar, keep every place that carries information and no more:
-  // $0.30 should not print as $0.3000 just because $0.00093 needs six places.
+  // $0.30 must not print as $0.3000 just because $0.00093 needs six places.
   const trimmed = n.toFixed(6).replace(/0+$/, "");
   const [whole, frac = ""] = trimmed.split(".");
   return `$${whole}.${frac.padEnd(2, "0")}`;

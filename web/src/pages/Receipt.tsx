@@ -21,26 +21,11 @@ import { Band } from "../components/Band";
 import { NavLink } from "../components/NavLink";
 
 /**
- * Verifies both halves of a payee's receipt, as docs/security.md §3 requires.
- *
- *   half 1  on-chain `verifyInclusion`: the payer committed to paying this
- *           payee exactly this amount in this run.
- *   half 2  a USDC `Transfer(payer → payee, amount)` log in the SAME transaction
- *           as this run's `RunRecorded` event: the money actually moved.
- *
- * Half 1 alone is NOT proof of payment: a payer could declare a run and send
- * nothing. The two are bound together by sharing one transaction hash, which is
- * what makes the pair unforgeable.
- *
- * A run sent with on-chain notes adds a third, independent reading: Arc's `Memo`
- * event carries `keccak256(callData)`, so recomputing the transfer calldata and
- * matching that hash proves the published note belongs to THIS transfer and not
- * some other payee's. Its absence is not a failure: it only means the payer
- * chose to keep notes off-chain.
- *
- * `wasSkipped` is read only when half 2 fails, which is the one case where the
- * payer's own record can explain the gap: a screened or invalid address the
- * payer has since acknowledged. It never turns a failure into a pass.
+ * Both halves of a receipt, as `docs/security.md` requires: the inclusion proof
+ * and a `Transfer` log in the same transaction. Half one alone proves only that
+ * the payer declared a run. A `Memo` log adds a third reading, binding a note to
+ * this payee. `wasSkipped` is read only when half two fails, and never turns a
+ * failure into a pass.
  */
 
 type Check2 = "pending" | "pass" | "fail";
@@ -53,11 +38,9 @@ const RUN_RECORDED_TOPIC = keccak256(
 const MEMO_TOPIC = keccak256(toHex("Memo(address,address,bytes32,bytes32,bytes,uint256)"));
 
 /**
- * Receipt links are the one thing handed to strangers, so every field arrives
- * from a URL somebody else may have mangled, truncated or invented. Anything
- * that does not match its shape is treated as a broken link rather than passed
- * to viem or to `BigInt`, which throw. One of these used to throw during render
- * and blank the page, which told a payee nothing except that we were broken.
+ * Every field comes from a URL a stranger may have mangled. Anything off-shape
+ * is a broken link, not something passed to viem or `BigInt`, which throw
+ * during render and blank the page.
  */
 const asAddress = (v: string | null): Hex | null =>
   v && /^0x[0-9a-fA-F]{40}$/.test(v) ? (v as Hex) : null;
@@ -99,9 +82,8 @@ export function Receipt() {
 
   useEffect(() => {
     (async () => {
-      // wagmi hands the client over a tick after mount. Reporting that as a
-      // broken receipt would tell a payee their payment failed because our
-      // transport had not warmed up yet, so wait instead.
+      // wagmi hands the client over a tick after mount, so wait rather than
+      // telling a payee their payment failed.
       if (!publicClient) return;
 
       if (!payer || !runId || !payee || !amount) {
@@ -112,8 +94,7 @@ export function Receipt() {
         return;
       }
 
-      // Every run starts from scratch: a verdict left over from a previous
-      // link would otherwise survive into this one.
+      // A verdict from a previous link must not survive into this one.
       setProblem("");
       setInclusion("pending");
       setTransfer("pending");
@@ -123,7 +104,7 @@ export function Receipt() {
       try {
         const noteHash = keccak256(toHex(memo));
 
-        // ── half 1: inclusion proof, free via eth_call ──────────────────
+        // half 1: inclusion proof, free via eth_call
         const ok = (await publicClient.readContract({
           address: PAYFETTI_ADDRESS,
           abi: payfettiAbi,
@@ -132,9 +113,8 @@ export function Receipt() {
         })) as boolean;
         setInclusion(ok ? "pass" : "fail");
 
-        // ── half 2: find the run's transaction, then its Transfer log ───
-        // The run record stores its own block number, so this is an O(1)
-        // lookup, with no log scanning across millions of blocks and no indexer.
+        // half 2: the run record stores its own block number, so finding its
+        // transaction is O(1) rather than a log scan.
         const run = (await publicClient.readContract({
           address: PAYFETTI_ADDRESS,
           abi: payfettiAbi,
@@ -197,9 +177,8 @@ export function Receipt() {
           setWasSkipped(skipped);
         }
 
-        // ── third reading: the on-chain note, if the payer published one ──
-        // `callDataHash` is keccak256 of the exact inner calldata, so rebuilding
-        // `transfer(payee, amount)` and matching it ties the note to THIS payee.
+        // third reading: `callDataHash` is keccak256 of the inner calldata, so
+        // rebuilding `transfer(payee, amount)` ties the note to this payee.
         const wantHash = keccak256(
           encodeFunctionData({
             abi: erc20Abi,
@@ -231,8 +210,7 @@ export function Receipt() {
             }
           }
           if (matched === null) {
-            // Notes were published for this run, but none is bound to this
-            // transfer. Worth surfacing rather than quietly showing nothing.
+            // Notes exist for this run but none binds to this transfer.
             setNoteCheck("fail");
           } else {
             setOnChainNote(matched);

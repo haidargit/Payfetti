@@ -1,14 +1,6 @@
 /**
- * Wallets to suggest to someone who has none yet.
- *
- * Only EOA wallets belong here. A smart account cannot pay through Payfetti at
- * all, so recommending one would send a reader off to install something that
- * will not work (see `useIsContractAccount` in pages/Create).
- *
- * No fetched logos: each would be a third-party request from a page that
- * otherwise makes none, and redrawing someone's brand mark by hand gets it
- * subtly wrong. A tile in the wallet's own colour carries the recognition
- * well enough at this size, and is honest about being our own mark.
+ * EOA wallets only: a smart account cannot pay through Payfetti at all. Tiles
+ * rather than fetched logos, so the page makes no third-party requests.
  */
 
 export type SuggestedWallet = {

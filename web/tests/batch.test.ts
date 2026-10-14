@@ -5,21 +5,15 @@ import { MEMO, USDC, erc20Abi, memoAbi, PAYFETTI_ADDRESS, payfettiAbi } from "..
 import type { ParsedRow } from "../src/lib/parse";
 
 /**
- * Calldata parity against values Arc actually accepted.
- *
- * The vectors below are not invented: they are the exact bytes
- * `scripts/probe-memo.py` built by hand and that Arc testnet accepted through
- * `eth_call` when proving `Memo` nests inside `Multicall3From.aggregate3`. If
- * viem's encoder and the hand-rolled Python encoder ever disagree, one of them
- * is building calldata the chain would reject, and these tests say which.
- *
- * Same discipline as `merkle.test.ts`: pin to the chain, not to ourselves.
+ * Calldata parity against bytes Arc accepted. The vectors come from
+ * `scripts/probe-memo.py`, so a disagreement between viem's encoder and the
+ * Python one means somebody is building calldata the chain would reject.
  */
 
 const PAYEE_1 = "0x7061796665747469000000000000000000000001" as Hex;
 const PAYEE_2 = "0x7061796665747469000000000000000000000002" as Hex;
 
-/** keccak256("payfetti-memo-probe") — the probe's memoId, reused here as runId. */
+/** keccak256("payfetti-memo-probe"), the probe's memoId, reused as runId. */
 const RUN_ID = "0x20f4d43a7f7d8c286bf183f30c3fd808b0abed3357fc0af406d982f7c25e9cf6" as Hex;
 
 const MEMO_CALLDATA_1 =
@@ -69,9 +63,8 @@ describe("the memo carries what a receipt needs", () => {
   });
 
   it("wraps a transfer whose keccak256 is what Receipt.tsx looks for", () => {
-    // Receipt.tsx recomputes keccak256(transfer(payee, amount)) and matches it
-    // against callDataHash in the Memo event. Prove the two agree here, because
-    // a mismatch would show every payee's note as unverified.
+    // Receipt.tsx matches this against callDataHash in the Memo event, and a
+    // mismatch would show every note as unverified.
     const bare = buildRun(rows(), "probe", RUN_ID, { onChainNotes: false });
     const { args } = decodeFunctionData({ abi: memoAbi, data: run.calls[0].callData });
     expect(args[1]).toBe(bare.calls[0].callData);
@@ -105,17 +98,16 @@ describe("the memo carries what a receipt needs", () => {
 
 describe("batch shape is unchanged by the memo option", () => {
   for (const onChainNotes of [true, false]) {
-    it(`onChainNotes: ${onChainNotes} — N payee calls plus one recordRun`, () => {
+    it(`onChainNotes: ${onChainNotes}, N payee calls plus one recordRun`, () => {
       const run = buildRun(rows(), "probe", RUN_ID, { onChainNotes });
       expect(run.calls).toHaveLength(3);
       expect(run.onChainNotes).toBe(onChainNotes);
 
-      // Payee calls tolerate failure, because Arc reverts transfers to
-      // blocklisted addresses and one bad row must not kill the run.
+      // Arc reverts transfers to blocklisted addresses, and one bad row must
+      // not kill the run.
       expect(run.calls.slice(0, 2).every((c) => c.allowFailure)).toBe(true);
 
-      // recordRun must NOT, so a replayed runId reverts the whole batch and
-      // nobody is paid twice.
+      // recordRun must not, so a replayed runId reverts the whole batch.
       const last = run.calls[2];
       expect(last.target.toLowerCase()).toBe(PAYFETTI_ADDRESS.toLowerCase());
       expect(last.allowFailure).toBe(false);
@@ -139,21 +131,16 @@ describe("batch shape is unchanged by the memo option", () => {
   });
 
   it("binds the run label, not the per-payee note, into the leaves", () => {
-    // The leaf commits keccak256(run label). Per-payee notes were never in the
-    // tree, which is exactly why Memo is what puts them on-chain.
+    // The leaf commits keccak256(run label), never the per-payee note, which
+    // is why Memo is what puts those on-chain.
     const run = buildRun(rows(), "probe", RUN_ID);
     expect(run.noteHash).toBe(keccak256(toHex("probe")));
   });
 });
 
 /**
- * The double-pay guard, which is the whole reason runIds are derived rather
- * than random.
- *
- * The failure these cover is not a double click — that is already blocked by
- * disabling the button. It is a payer who signs, loses the tab before the
- * receipt lands, reopens the app and pastes the same list. With a random id
- * that second attempt was a fresh run and everyone was paid twice.
+ * The double-pay guard. Not a double click, which the disabled button already
+ * blocks, but a payer who loses the tab mid-send and pastes the same list again.
  */
 describe("deriveRunId closes the lost-tab double-pay hole", () => {
   const PAYER = "0x8d026a62f466f7c457be8e3e139c701b791e668e" as Hex;

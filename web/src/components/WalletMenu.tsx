@@ -10,25 +10,12 @@ import { Copyable } from "./Copyable";
 import { BrowserWalletMark, CoinbaseMark, WalletConnectMark } from "./WalletMarks";
 
 /**
- * The wallet picker.
- *
- * The list is not a registry we maintain: wagmi discovers installed wallets
- * over EIP-6963 and hands back each one's real name and icon, so whatever a
- * reader has installed is what they see. Coinbase and WalletConnect are added
- * for people with no extension, and the suggestions below are for people with
- * no wallet at all.
- *
- * `injected` is the unnamed fallback for a browser wallet too old to announce
- * itself. Showing it beside wallets that did announce themselves would just be
- * a second, worse button for the same extension, so it appears only when
- * discovery found nothing.
+ * wagmi discovers installed wallets over EIP-6963, so the list is not a registry
+ * we maintain. The unnamed `injected` fallback appears only when discovery found
+ * nothing, since otherwise it duplicates an extension that already announced.
  */
 
-/**
- * A connector's own icon where it has one, and a drawn mark for the built-ins
- * that do not. Falling through to an initial would make a wallet picker look
- * like a wireframe, which is most of what the built-ins otherwise give us.
- */
+/** A connector's own icon, or a drawn mark for the built-ins that lack one. */
 function ConnectorArt({ c }: { c: Connector }) {
   if (c.icon) return <img className="wtile-art" src={c.icon} alt="" width={44} height={44} />;
   if (c.id === "coinbaseWalletSDK") return <CoinbaseMark />;
@@ -93,10 +80,9 @@ function Tile({
 }
 
 /**
- * Whether a legacy injected provider is actually present. The fallback
- * connector throws "Provider not found" when it is not, and offering a button
- * whose only outcome is that error is worse than saying so up front. The
- * common cause is a private window, where extensions are off unless allowed.
+ * The fallback connector throws "Provider not found" when absent, so check
+ * rather than offer a button whose only outcome is that error. Usually a
+ * private window, where extensions are off unless allowed.
  */
 function useHasInjected(when: boolean) {
   const [has, setHas] = useState(false);

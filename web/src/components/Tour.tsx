@@ -4,12 +4,8 @@ import "driver.js/dist/driver.css";
 import { TOUR_KEY, TOUR_STEPS } from "../lib/tour";
 
 /**
- * The guided tour. driver.js handles the overlay, focus and keyboard; the
- * styling is ours (see styles/tour.css) so a popover reads as part of the app
- * rather than as a third-party widget.
- *
- * It offers itself once. Finishing or skipping writes a flag, and a blocked or
- * cleared localStorage only means the offer comes back, never an error.
+ * driver.js handles overlay, focus and keyboard; styling is ours. Offered once,
+ * and a blocked localStorage only means the offer returns, never an error.
  */
 
 function remember(value: "done" | "skipped") {
@@ -44,8 +40,7 @@ export function useTour({ enabled }: { enabled: boolean }) {
       nextBtnText: "Next",
       prevBtnText: "Back",
       doneBtnText: "Start a run",
-      // The close control is the "I'll explore on my own" exit, so it stays
-      // available on every step rather than only the first.
+      // The exit stays on every step, not just the first.
       showButtons: ["next", "previous", "close"],
       steps: TOUR_STEPS.map((s) => ({
         element: s.target,
@@ -64,17 +59,14 @@ export function useTour({ enabled }: { enabled: boolean }) {
     d.drive();
   }, []);
 
-  // Offered once, and late enough that the wallet button and the quote panel
-  // have laid out, since a step pointing at nothing is worse than no step.
+  // Late enough that the targets have laid out.
   useEffect(() => {
     if (!enabled || alreadySeen()) return;
     const t = window.setTimeout(start, 900);
     return () => window.clearTimeout(t);
   }, [enabled, start]);
 
-  // Leaving the composer has to close it too. The steps point at fields that no
-  // longer exist, so an overlay left running would highlight nothing on a page
-  // it was never about.
+  // Leaving the composer closes it: the steps point at fields that are gone.
   useEffect(() => {
     if (!enabled) ref.current?.destroy();
   }, [enabled]);

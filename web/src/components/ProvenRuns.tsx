@@ -4,18 +4,9 @@ import { Icon } from "./Icon";
 import { NavLink } from "./NavLink";
 
 /**
- * Runs that actually executed, with the transactions to check them against. The
- * figures come from `fixtures/` and the README.
- *
- * This is the one claim on the page that is not a model, which is exactly why
- * every entry carries its **own** network. Building these links from the
- * current network instead would render mainnet explorer URLs for testnet
- * hashes the moment the app is pointed at mainnet, so dead links on the section
- * that exists to be checkable.
- *
- * The same rule governs the sample receipt: a proof only verifies against the
- * chain that recorded its run, so it is offered only when the app is pointed at
- * that chain.
+ * Runs that executed, with figures from `fixtures/`. Every entry carries its own
+ * network: built from the current one, a mainnet build would render dead links
+ * for testnet hashes on the one section that exists to be checked.
  */
 
 type Net = "mainnet" | "testnet";
@@ -65,12 +56,8 @@ const SAMPLE_RECEIPT =
   ",0xca73cd1cfe9829eeacd9740dd86a473b450442d8c8358544af1138e79ba4ef83";
 
 export function ProvenRuns() {
-  /*
-   * Pointed at mainnet, the section shows mainnet runs only. A practice run
-   * listed beside a real one invites the reader to count it as evidence, and
-   * the whole point of this section is that every line on it moved real money.
-   * Pointed at testnet, both are shown: that is the network you are testing on.
-   */
+  // On mainnet, mainnet runs only: a practice run listed beside a real one
+  // invites counting it as evidence.
   const runs = isMainnet ? RUNS.filter((r) => r.net === "mainnet") : RUNS;
 
   return (
